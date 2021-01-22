@@ -196,6 +196,7 @@ class Vfx{
 		this.brightLimit = 70;
 		this.unsatLimit = 40;
 		this.satLimit = 90;
+		this.hsla = this.hslaEdit();
 	}
 	hslaEdit(type,hsla,modify){
 		let brightLimit = this.brightLimit;
@@ -249,7 +250,15 @@ class Vfx{
 		engine.ui.menu.dev.hsla.h = theta;
 	}
 	drawButton(btn){
-		this.drawRounded(btn.x,btn.y,btn.width,btn.height,btn.hsla,this.buttonRounding);
+		this.hsla.h = btn.hsla.h;
+		this.hsla.s = btn.hsla.s;
+		if (btn.isDiabled){
+			this.hsla.l = btn.hsla.l/3;
+		}else{
+			this.hsla.l = btn.hsla.l
+		}
+		this.hsla.a = btn.hsla.a;
+		this.drawRounded(btn.x,btn.y,btn.width,btn.height,this.hsla,this.buttonRounding);
 		if(btn.isHighlight){
 			this.drawHighlight(btn.x,btn.y,btn.width,btn.height,btn.hsla);
 		}
@@ -362,6 +371,7 @@ class Button{
 		this.isVisible = true;
 		this.isHighlight = false;
 		this.isMouseOver = false;
+		this.isDiabled = false;
 		this.hoverText = [];
 		this.value = '';
 		//converted to pixels from relative proportions

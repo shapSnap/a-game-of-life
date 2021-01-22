@@ -610,13 +610,15 @@ class Game{
 	deleteGame(){
 	localStorage.removeItem("primary");
 	console.log('Save Deleted');
+	this.player.initStats();
+	this.player.applyStats();	
 	}
 	loadGame(){
 		let gameJSON = localStorage.getItem("primary");
 		//JSON revive method to rebuild stats object
-		let data = JSON.parse(gameJSON)
-		this.player.initStats(data);
-		this.player.applyStats();
+		let data = JSON.parse(gameJSON);
+		this.player.initStats();
+		this.player.applyStats(data);
 		
 		console.log('loaded game');
 	}	
@@ -641,16 +643,17 @@ class Player{
 		this.mouseSpawnButton = null;
 		this.labPrestigePurchases = [];
 	}
-	initStats(data){
-		if(data != null){
-			this.stats = data;
-		}else{
+	initStats(){
+		
 		this.stats.baseIncomeRate = 1;
 		this.stats.conwayPopBonus = -40;
 		this.stats.playerPopBonus = 20;
 		this.stats.rateMultiplier = 1;
 		this.stats.currency = 1400;
 		this.stats.randomSize = 2;
+		//tracks all purchases in order to load or prestige and keep bought items -- does it stupidly to avoid messy Class JSO
+		//TODO: save memory by implementing the messy JSON anyway
+		this.stats.purchases = [];
 		//spawn menu costs
 		//5 leaves spawn.spore visible
 		this.stats.lockedSpawnNumber = 5;
@@ -676,7 +679,7 @@ class Player{
 		this.stats.skill4 = 10;
 		this.stats.randomSizeCost = 2;
 		//lab menu related values
-		this.stats.material = 200;
+		this.stats.material = 0;
 		this.stats.materialTotal = 0;
 		this.stats.labPoints = 0;
 		this.stats.unlockSpawn = 4;
@@ -693,12 +696,16 @@ class Player{
 		this.stats.lab6 = 2;
 		this.stats.lab7 = 3;
 		this.stats.lab8 = 4;
-		}
+		
 	}
-	applyStats(){
+	applyStats(data){
 		let stats = this.stats;
 		let m = engine.ui.menu.spawn;
 		//spawn related
+		//TODO FIX -- move this to if load game below
+		for (let s = 1; s < this.lockedSpawns.length + 1; s++){
+			this.lockedSpawns[this.lockedSpawns.length-s].isVisible = true;
+		}
 		for (let s = 1; s < stats.lockedSpawnNumber; s++){
 			this.lockedSpawns[this.lockedSpawns.length-s].isVisible = false;
 		}
@@ -720,6 +727,16 @@ class Player{
 		m.skill2.cost = stats.skill2;
 		m.skill3.cost = stats.skill3;
 		m.skill4.cost = stats.skill4;
+		m.craftDouble.cost = stats.craftDouble;
+		m.skillDouble.isDisabled = false;
+		m.craft1.isDisabled = false;
+		m.craft2.isDisabled = false;
+		m.craft3.isDisabled = false;
+		m.craft4.isDisabled = false;
+		m.skill1.isDisabled = false;
+		m.skill2.isDisabled = false;
+		m.skill3.isDisabled = false;
+		m.skill4.isDisabled = false;
 		//lab related costs
 		m = engine.ui.menu.lab;
 		m.material.value = stats.material;
@@ -737,7 +754,49 @@ class Player{
 		m.skill2.cost = stats.lab6;
 		m.skill3.cost = stats.lab7;
 		m.skill4.cost = stats.lab8;
+		m.unlock.isDisabled = false;
+		m.spawn.isDisabled = false;
+		m.craft.isDisabled = false;
+		m.skill.isDisabled = false;
+		m.craft1.isDisabled = false;
+		m.craft2.isDisabled = false;
+		m.craft3.isDisabled = false;
+		m.craft4.isDisabled = false;
+		m.skill1.isDisabled = false;
+		m.skill2.isDisabled = false;
+		m.skill3.isDisabled = false;
+		m.skill4.isDisabled = false;
+		//ascend
+		//vacate
 		
+		//data is stats object of load data
+		let translateNameToButton = function(buttonName){
+			for (let menu of engine.ui.menus){
+				for (let button of menu.buttons){
+					if ( button.name == buttonName){
+						return (button);
+					}
+				}
+			}
+			return (null);
+		}
+		
+		//load stats from a saved game
+		if(data != null){
+			
+			this.stats.currency = data.currency;
+			this.stats.randomSize = data.randomSize;
+			this.stats.material = data.material;
+			this.stats.materialTotal = data.materialTotal;
+			//TODO: add zen and whatever vacate currency is
+			
+			//TODO: add error correcting - may pass null to this.purchase
+			for (let buttonName of data.purchases){
+				let button = translateNameToButton(buttonName);
+				console.log('Load Purchase: ' + button.name);
+				this.purchase(button,true);
+			}
+		}
 	}
 	
 	
@@ -758,6 +817,7 @@ class Player{
 		let menu = engine.ui.menu;
 		console.log('Purchase request: ' + button.name);
 		if ((isFree == true) || (this.isAffordable(button))){
+			this.stats.purchases.push(button.name);
 			let cost = button.cost;
 			if (isFree){
 				cost = 0;
@@ -920,11 +980,14 @@ class Player{
 			}
 		
 		}
+		
 	}
+	
 	disableButton(button){
 		button.value = null;
 		button.cost = null;
 		button.isHighlight = false;
+		button.isDisabled = true;
 		button.hsla.a = .4;
 	}
 	isAffordable(button){

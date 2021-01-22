@@ -1,2 +1,3 @@
-# a-game-of-life
- One player idle adaptation of Conway's Game of Life
+# A Game of Life - Idle Edition
+ One player idle adaptation of Conway's Game of Life. Play it here...
+https://shapsnap.github.io/a-game-of-life/index.html

@@ -14,7 +14,14 @@ class Game{
 		this.conway.conwaySpawn(this.conway.options);
 	}
 	
+	resetMenus(){
+		engine.ui = new Ui();
+		this.createMenus(engine.ui);
+	}
 	updateStats(ui){
+		//autopurchase before screen updateStats
+		this.player.autoPurchase();
+		//erase hud menus if on settings/start screen
 		let m = engine.ui.menu;
 		for (let hudBtn of engine.ui.menu.hud.buttons){
 			if(m.rules.isVisible && hudBtn != m.hud.settings){
@@ -29,6 +36,7 @@ class Game{
 				m.vacate.isToggled = false;
 			}else{hudBtn.isVisible = true;}
 		}
+		//call each menu and refresh each visible button
 		for (let menu of ui.menus){
 			if (menu.isVisible){
 				for (let button of menu.buttons){
@@ -79,19 +87,13 @@ class Game{
 			button.value = this.conway.conwayPopulation;
 			break;
 			case menu.rateOfInfection:
-			button.value = this.player.stats.conwayPopBonus.toPrecision(2);
-			break;
-			case menu.bodies:
-			button.value = this.conway.conwayPopulation;
-			break;
-			case menu.rateOfInfection:
-			button.value = this.conway.conwayGrowth.toPrecision(2);
+			button.value = (this.player.stats.conwayPopBonus*(this.conway.conwayPopulation/this.conway.numOfShapes)).toPrecision(2);
 			break;
 			case menu.antibodies:
 			button.value = this.conway.playerPopulation;
 			break;
 			case menu.rateOfProtection:
-			button.value = this.player.stats.playerPopBonus.toPrecision(2);
+			button.value = (this.player.stats.playerPopBonus*(this.conway.playerPopulation/this.conway.numOfShapes)).toPrecision(2);
 			break;
 			default:
 			//this.highlightAffordable(button);
@@ -416,6 +418,10 @@ class Game{
 		spawn.vine = spawn.createButton('Vine',2,53,7,6,        5,100,60,1.0);
 		spawn.spore = spawn.createButton('Spore',2,65,7,6,     30,100,60,1.0);
 		spawn.random = spawn.createButton('Random',2,77,7,6,   45,100,60,1.0);
+		spawn.acorn.isVisible = false;
+		spawn.crawler.isVisible = false;
+		spawn.star.isVisible = false;
+		spawn.vine.isVisible = false;
 		
 		
 		
@@ -617,9 +623,10 @@ class Game{
 		let gameJSON = localStorage.getItem("primary");
 		//JSON revive method to rebuild stats object
 		let data = JSON.parse(gameJSON);
+		this.resetMenus();
 		this.player.initStats();
-		this.player.applyStats(data);
-		
+		this.player.applyLoad(data);
+		this.player.applyStats();
 		console.log('loaded game');
 	}	
 	
@@ -635,21 +642,25 @@ class Player{
 		this.game = engine.game;
 		this.stats = {};
 		let spawn = engine.ui.menu.spawn;
-		this.lockedSpawns = [engine.ui.menu.spawn.spore, engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.acorn];
 		this.initStats();
 		this.applyStats();
 		this.mouseSpawnShapes = [];
 		this.squareMap = null;
 		this.mouseSpawnButton = null;
 		this.labPrestigePurchases = [];
+		//Game cycle will check this list and attempt to purchase button automatically
+		this.autoPurchases = [];
+		
 	}
 	initStats(){
+		this.lockedSpawns = [engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.acorn];
+		//this.lockedSpawns = [engine.ui.menu.spawn.spore, engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.acorn];
 		
-		this.stats.baseIncomeRate = 1;
-		this.stats.conwayPopBonus = -40;
-		this.stats.playerPopBonus = 20;
+		this.stats.baseIncomeRate = .10;
+		this.stats.conwayPopBonus = -20;
+		this.stats.playerPopBonus = 50;
 		this.stats.rateMultiplier = 1;
-		this.stats.currency = 1400;
+		this.stats.currency = 0;
 		this.stats.randomSize = 2;
 		//tracks all purchases in order to load or prestige and keep bought items -- does it stupidly to avoid messy Class JSO
 		//TODO: save memory by implementing the messy JSON anyway
@@ -680,7 +691,7 @@ class Player{
 		this.stats.randomSizeCost = 2;
 		//lab menu related values
 		this.stats.material = 0;
-		this.stats.materialTotal = 0;
+		this.stats.materialTotal = this.stats.material;
 		this.stats.labPoints = 0;
 		this.stats.unlockSpawn = 4;
 		this.stats.autoSpawn = 4;
@@ -698,17 +709,15 @@ class Player{
 		this.stats.lab8 = 4;
 		
 	}
-	applyStats(data){
+	applyStats(){
 		let stats = this.stats;
 		let m = engine.ui.menu.spawn;
 		//spawn related
 		//TODO FIX -- move this to if load game below
-		for (let s = 1; s < this.lockedSpawns.length + 1; s++){
-			this.lockedSpawns[this.lockedSpawns.length-s].isVisible = true;
-		}
-		for (let s = 1; s < stats.lockedSpawnNumber; s++){
+		for (let s = 1; s < this.lockedSpawns.length; s++){
 			this.lockedSpawns[this.lockedSpawns.length-s].isVisible = false;
 		}
+		
 		m.acorn.cost = stats.acorn;
 		m.crawler.cost = stats.crawler;
 		m.star.cost = stats.star;
@@ -769,55 +778,81 @@ class Player{
 		//ascend
 		//vacate
 		
-		//data is stats object of load data
-		let translateNameToButton = function(buttonName){
-			for (let menu of engine.ui.menus){
-				for (let button of menu.buttons){
-					if ( button.name == buttonName){
-						return (button);
-					}
+		
+		
+		
+	}
+	translateNameToButton(buttonName){
+		for (let menu of engine.ui.menus){
+			for (let button of menu.buttons){
+				if ( button.name == buttonName){
+					return (button);
 				}
 			}
-			return (null);
 		}
-		
+		return (null);
+	}
+	applyLoad(data){
 		//load stats from a saved game
 		if(data != null){
 			
 			this.stats.currency = data.currency;
 			this.stats.randomSize = data.randomSize;
+			//this.stats.lockedSpawnNumber = data.lockedSpawnNumber;
 			this.stats.material = data.material;
 			this.stats.materialTotal = data.materialTotal;
 			//TODO: add zen and whatever vacate currency is
 			
 			//TODO: add error correcting - may pass null to this.purchase
 			for (let buttonName of data.purchases){
-				let button = translateNameToButton(buttonName);
+				let button = this.translateNameToButton(buttonName);
 				console.log('Load Purchase: ' + button.name);
 				this.purchase(button,true);
 			}
 		}
 	}
-	
-	
-	//when ascending, call purchase on unlocked buttons
-	prestigeLab(gain){
+	applyLabPrestige(gain){
+		//capture kept items
+		//TODO: add higher currencies for ascend and vacate
+		console.log('Lab Prestige Gain: ' + gain);
 		let material = this.stats.material;
 		let total = this.stats.materialTotal;
-		this.stats.setInitValues();
-		this.stats.setStats();
-		for (let button of this.labPrestigePurchases){
-			this.purchase(button,true);
+		let labPurchases = [];
+		for (let buttonName of this.stats.purchases){
+			let button = this.translateNameToButton(buttonName);
+			if(button.parent == engine.ui.menu.lab){
+				labPurchases.push(button);
+			}
 		}
-		this.stats.materialTotal = total + gain;
+		//reset game, add values to stats, purchase kept buttons
+		engine.game.resetMenus();
+		this.initStats();
+		this.applyStats();
+		this.stats.materialTotal =total + gain;
 		this.stats.material = material + gain;
+		for (let labButton of labPurchases){
+			this.purchase(labButton, true);
+		}
 	}
+	//to be called by game cycle to autopurchase affordable
+	autoPurchase(){
+		for (let button of this.autoPurchases){
+			while(this.isAffordable(button)){
+				this.purchase(button,false);
+			}
+		}
+	}
+	
 	purchase(button,isFree){
 		let costMultiplier = 1.5;
 		let menu = engine.ui.menu;
 		console.log('Purchase request: ' + button.name);
 		if ((isFree == true) || (this.isAffordable(button))){
-			this.stats.purchases.push(button.name);
+			//TODO add other ascenscions here
+			//dont add ascensions to load purchase lists
+			if (button != menu.lab.renovate){
+				this.stats.purchases.push(button.name);
+			}
 			let cost = button.cost;
 			if (isFree){
 				cost = 0;
@@ -831,10 +866,18 @@ class Player{
 					button.cost = this.stats.craftDouble;
 					break;
 					case menu.skills.skillDouble:
-					this.stats.randomSize += 1;
-					this.stats.randomSizeCost += this.stats.randomSizeCost*costMultiplier;
-					button.cost = this.stats.randomSizeCost;
+					this.stats.spawnInterval = Math.floor(this.stats.spawnInterval*0.4);
+					if (this.stats.spawnInterval < 20){
+						this.stats.spawnInterval = 0;
+						this.disableButton(button);
+					}else{
+						button.cost += Math.floor(button.cost*costMultiplier);
+					}
+					console.log('SpawnInterval: ' + this.stats.spawnInterval);
 					break;
+					//case someMenu.randomSizeButton
+					//this.stats.randomSize += 1;
+					//this.stats.randomSizeCost += this.stats.randomSizeCost*costMultiplier;
 					case menu.skills.craft1:
 					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
 					this.stats.craft1 = null;
@@ -882,19 +925,26 @@ class Player{
 				case menu.lab:
 				//TODO add labCraft and labSkill 
 				switch (button){
+					case menu.lab.craft:
+					this.autoPurchases.push(menu.skills.craftDouble);
+					this.disableButton(button);
+					break;
+					case menu.lab.skill:
+					this.autoPurchases.push(menu.skills.skillDouble);
+					this.disableButton(button);
+					break;
 					case menu.lab.renovate:
-					this.prestigeLab(Math.floor(Math.cbrt(this.stats.currency/10)));
+					this.applyLabPrestige(Math.floor(Math.cbrt(this.stats.currency/10)));
 					break;
 					case menu.lab.unlock:
-					if(this.stats.lockedSpawnNumber > 1){
-						this.stats.lockedSpawnNumber -= 1;
-						this.lockedSpawns[this.lockedSpawns.length - this.stats.lockedSpawnNumber].isVisible = true;
+					if(this.lockedSpawns.length > 0){
+						this.lockedSpawns.shift().isVisible = true;
 						this.stats.unlockSpawn += Math.floor(this.stats.unlockSpawn*costMultiplier);
 						button.cost = this.stats.unlockSpawn;
-						if(this.stats.lockedSpawnNumber == 1){
-							this.stats.unlockSpawn = null;
-							this.disableButton(button)
-						}
+					}
+					if(this.lockedSpawns.length < 1){
+						this.stats.unlockSpawn = null;
+						this.disableButton(button)
 					}
 					break;
 					case menu.lab.spawn:
@@ -994,7 +1044,7 @@ class Player{
 		let menu = engine.ui.menu;
 		switch (button.parent){
 			case menu.lab:
-			return ((button.cost <= this.stats.material) && (button.cost != null));
+			return (button == menu.lab.renovate || ((button.cost <= this.stats.material) && (button.cost != null)));
 			break;
 			default:
 			return ((button.cost <= this.stats.currency) && (button.cost != null));
@@ -1291,7 +1341,9 @@ class Conway {
 		this.conwayGrowth = this.conwayPopulation - conwayPopulation;
 		this.playerGrowth = this.playerPopulation - playerPopulation;
 		// award player end of cycle gains/losses
-		this.rateOfCurrency = this.game.player.stats.baseIncomeRate*(this.game.player.stats.rateMultiplier + this.game.player.stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes) + this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes));
+		this.rateOfCurrency = this.game.player.stats.baseIncomeRate*(this.game.player.stats.rateMultiplier + 
+								this.game.player.stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes) + 
+								this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes));
 		this.game.player.stats.currency += this.rateOfCurrency;
 		
 	}

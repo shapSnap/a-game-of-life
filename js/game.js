@@ -53,7 +53,7 @@ class Game{
 			this.player.drawMouseSpawn(x,y);
 		} else if (event == 'mUp' && this.player.mouseSpawnShapes.length != 0){
 			//this is only called with mUp if not over a ui button
-			this.player.placeMouseSpawn(x,y);
+			this.player.placeMouseSpawn(this.player.spawn,x,y);
 		}
 		
 	}
@@ -305,8 +305,14 @@ class Game{
 			break;
 			//skills falls under default for now
 			case menu.skills:
-			button.value = button.cost;
-			this.highlightAffordable(button,this.player.stats.currency);
+			if (button.cost != null){
+				if(button.cost > 99999){
+					button.value = button.cost.toPrecision(2);
+				}else{
+					button.value = Math.ceil(button.cost);
+				}
+				this.highlightAffordable(button,this.player.stats.currency);
+			}
 			break;
 			case menu.hud:
 			this.refreshHudMenu(button);
@@ -342,7 +348,7 @@ class Game{
 			}
 			break;
 			case menu.spawn:	
-			this.player.addMouseSpawn(button);
+			this.player.prepareMouseSpawn(button);
 			break;
 			
 			default:
@@ -412,13 +418,13 @@ class Game{
 		ui.menus.push(spawn);
 		spawn.isHover = true;
 		spawn.isVisible = false;
-		spawn.acorn = spawn.createButton('Acorn',2,17,7,6,    290,100,60,1.0);
-		spawn.crawler = spawn.createButton('Crawler',2,29,7,6,315,100,60,1.0);
-		spawn.star = spawn.createButton('Star',2,41,7,6,      340,100,60,1.0);
-		spawn.vine = spawn.createButton('Vine',2,53,7,6,        5,100,60,1.0);
-		spawn.spore = spawn.createButton('Spore',2,65,7,6,     30,100,60,1.0);
+		spawn.rPen = spawn.createButton('r-Pento',2,17,7,6,    290,100,60,1.0);
+		spawn.crawler = spawn.createButton('Acorn',2,29,7,6,315,100,60,1.0);
+		spawn.star = spawn.createButton('SpaceShip',2,41,7,6,      340,100,60,1.0);
+		spawn.vine = spawn.createButton('Loafer',2,53,7,6,        5,100,60,1.0);
+		spawn.spore = spawn.createButton('Glider',2,65,7,6,     30,100,60,1.0);
 		spawn.random = spawn.createButton('Random',2,77,7,6,   45,100,60,1.0);
-		spawn.acorn.isVisible = false;
+		spawn.rPen.isVisible = false;
 		spawn.crawler.isVisible = false;
 		spawn.star.isVisible = false;
 		spawn.vine.isVisible = false;
@@ -504,6 +510,7 @@ class Game{
 		lab.skill3.hoverText.push('Think out of the box,',' in your new cube! Keep Planning','skills after lab renovations.');
 		lab.skill4 = lab.createButton('Limbo Stick',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		lab.skill4.hoverText.push('It is a party, and *you* are invited.','Keep limber during free time and','Agility skills after lab renovations.');
+		
 		x = 53.9;
 		w = 22;
 		s = 7;
@@ -591,8 +598,8 @@ class Game{
 		hud.spawn = hud.createButton('Spawn',0,93,8,6,70,96,78,1.0);
 		hud.skills = hud.createButton('Skills',17,93,8,6,95,96,78,1.0);
 		hud.lab = hud.createButton('Lab',39,93,8,6,120,96,78,1.0);
-		hud.ascend = hud.createButton('Ascend',60.9,93,8,6,145,96,78,1.0);
-		hud.vacate = hud.createButton('Vacate',82.8,93,8,6,170,96,78,1.0);
+		//hud.ascend = hud.createButton('Ascend',60.9,93,8,6,145,96,78,1.0);
+		//hud.vacate = hud.createButton('Vacate',82.8,93,8,6,170,96,78,1.0);
 		hud.settings = hud.createButton('Settings',92,93,8,6,195,96,78,1.0);
 		
 		
@@ -618,6 +625,9 @@ class Game{
 	console.log('Save Deleted');
 	this.player.initStats();
 	this.player.applyStats();	
+	this.player.stats.currency += 1000000;
+	this.player.stats.materialTotal += 1000;
+	this.player.stats.material += 1000;
 	}
 	loadGame(){
 		let gameJSON = localStorage.getItem("primary");
@@ -653,14 +663,16 @@ class Player{
 		
 	}
 	initStats(){
-		this.lockedSpawns = [engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.acorn];
+		this.lockedSpawns = [engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.rPen];
 		//this.lockedSpawns = [engine.ui.menu.spawn.spore, engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.acorn];
 		
 		this.stats.baseIncomeRate = .10;
-		this.stats.conwayPopBonus = -20;
-		this.stats.playerPopBonus = 50;
+		this.stats.conwayPopBonus = -9;
+		this.stats.playerPopBonus = 10;
 		this.stats.rateMultiplier = 1;
 		this.stats.currency = 0;
+		this.stats.material = 0;
+		this.stats.materialTotal = this.stats.material;
 		this.stats.randomSize = 2;
 		//tracks all purchases in order to load or prestige and keep bought items -- does it stupidly to avoid messy Class JSO
 		//TODO: save memory by implementing the messy JSON anyway
@@ -668,7 +680,7 @@ class Player{
 		//spawn menu costs
 		//5 leaves spawn.spore visible
 		this.stats.lockedSpawnNumber = 5;
-		this.stats.spawnInterval = 120;
+		this.stats.spawnInterval = 100;
 		this.stats.isSpawnAvailable = true;
 		this.stats.spawnTimeout = 0;
 		this.stats.acorn = 0;
@@ -681,17 +693,15 @@ class Player{
 		this.stats.craftDouble = 200;
 		this.stats.skillDouble = 10;
 		this.stats.craft1 = 10;
-		this.stats.craft2 = 10;
-		this.stats.craft3 = 10;
-		this.stats.craft4 = 10;
-		this.stats.skill1 = 10;
-		this.stats.skill2 = 10;
-		this.stats.skill3 = 10;
-		this.stats.skill4 = 10;
+		this.stats.craft2 = 75;
+		this.stats.craft3 = 300;
+		this.stats.craft4 = 1000;
+		this.stats.skill1 = 15;
+		this.stats.skill2 = 100;
+		this.stats.skill3 = 600;
+		this.stats.skill4 = 2000;
 		this.stats.randomSizeCost = 2;
 		//lab menu related values
-		this.stats.material = 0;
-		this.stats.materialTotal = this.stats.material;
 		this.stats.labPoints = 0;
 		this.stats.unlockSpawn = 4;
 		this.stats.autoSpawn = 4;
@@ -702,11 +712,11 @@ class Player{
 		this.stats.lab1 = 1;
 		this.stats.lab2 = 2;
 		this.stats.lab3 = 3;
-		this.stats.lab4 = 4;
-		this.stats.lab5 = 1;
-		this.stats.lab6 = 2;
-		this.stats.lab7 = 3;
-		this.stats.lab8 = 4;
+		this.stats.lab4 = 5;
+		this.stats.lab5 = 2;
+		this.stats.lab6 = 4;
+		this.stats.lab7 = 5;
+		this.stats.lab8 = 6;
 		
 	}
 	applyStats(){
@@ -718,7 +728,7 @@ class Player{
 			this.lockedSpawns[this.lockedSpawns.length-s].isVisible = false;
 		}
 		
-		m.acorn.cost = stats.acorn;
+		m.rPen.cost = stats.acorn;
 		m.crawler.cost = stats.crawler;
 		m.star.cost = stats.star;
 		m.vine.cost = stats.vine;
@@ -817,21 +827,21 @@ class Player{
 		console.log('Lab Prestige Gain: ' + gain);
 		let material = this.stats.material;
 		let total = this.stats.materialTotal;
-		let labPurchases = [];
-		for (let buttonName of this.stats.purchases){
-			let button = this.translateNameToButton(buttonName);
-			if(button.parent == engine.ui.menu.lab){
-				labPurchases.push(button);
-			}
-		}
+		let labPurchases = this.stats.purchases.slice(0);
+		let toggle = engine.ui.menu.lab.isToggled;
 		//reset game, add values to stats, purchase kept buttons
 		engine.game.resetMenus();
 		this.initStats();
 		this.applyStats();
 		this.stats.materialTotal =total + gain;
 		this.stats.material = material + gain;
-		for (let labButton of labPurchases){
-			this.purchase(labButton, true);
+		engine.ui.menu.lab.isVisible = true;
+		engine.ui.menu.lab.isToggled = toggle;
+		for (let buttonName of labPurchases){
+			let button = this.translateNameToButton(buttonName);
+			if(button.parent == engine.ui.menu.lab){
+				this.purchase(button, true);
+			}
 		}
 	}
 	//to be called by game cycle to autopurchase affordable
@@ -866,8 +876,8 @@ class Player{
 					button.cost = this.stats.craftDouble;
 					break;
 					case menu.skills.skillDouble:
-					this.stats.spawnInterval = Math.floor(this.stats.spawnInterval*0.4);
-					if (this.stats.spawnInterval < 20){
+					this.stats.spawnInterval = Math.floor(this.stats.spawnInterval*0.7);
+					if (this.stats.spawnInterval < 15){
 						this.stats.spawnInterval = 0;
 						this.disableButton(button);
 					}else{
@@ -1063,102 +1073,205 @@ class Player{
 			this.mouseSpawnButton = null;
 		}
 	}
-	//Confirm mouse spawn and convert to a creature
-	placeMouseSpawn(x,y){
-		console.log('Start Placement: ' + x + ',' + y);
-		let mouseToGrid = engine.game.grid.getCloseShape(x,y);
-		let dX = Math.floor(mouseToGrid.x - this.mouseSpawnShapes[0].x);
-		let dY = Math.floor(mouseToGrid.y - this.mouseSpawnShapes[0].y);
-		let creature = new Creature (engine.game,mouseToGrid,Math.floor(Math.random()*361),'player');
-		engine.game.conway.creatures.push(creature);
-		for (let s of this.mouseSpawnShapes){
-			mouseToGrid = engine.game.grid.getCloseShape(s.x + dX,s.y + dY);
-			mouseToGrid.creature.removeShape(mouseToGrid,engine.game.conway.liveShapes);
-			mouseToGrid.life = 1;
-			creature.addShape(mouseToGrid,engine.game.conway.liveShapes);
-		}
-		console.log('End Placement');
-		while(this.mouseSpawnShapes.length > 0){
-			this.mouseSpawnShapes.pop();
-		}
-		console.log('End Reomoval');
-		this.stats.isSpawnAvailable = false;
-		this.stats.spawnTimeout = engine.counter + this.stats.spawnInterval;
+	generateRandomSpawn(){
 		
-		
-	}
-	addMouseSpawn(button){
-		let chIndex = 0;
-	  if (this.mouseSpawnShapes.length < 1){
-		this.mouseSpawnButton = button;
-		let x = Math.floor(button.x +button.width);
-		let y = Math.floor(button.y + button.width/2);
-		let row = 0;
-		console.log('Add Spawn: ' + x +','+ y);
-		let s = engine.game.grid.getCloseShape(x,y); 
-		//console.log('SpawnHover: ' +this.mouseSpawnButton.name);
-		let oShape = s;
 		let map = '';
-		switch(button.name){
-			case 'Acorn':
-			map = engine.game.conway.acorn;
-			break;
-			case 'Crawler':
-			map = engine.game.conway.gun;
-			break;
-			case 'Star':
-			map = engine.game.conway.star;
-			break;
-			case 'Vine':
-			map = engine.game.conway.aircraft;
-			break;
-			case 'Spore':
-			map = engine.game.conway.square;
-			break;
-			default:
-			map = engine.game.conway.generate(this.stats.randomSize);
-		}
-		//convert map to block object
-		//find number of rows and longest row
-		
-		//randomize E/W and N/S
-		let latitude = Math.floor(Math.random()*2);
-		let longitude = Math.floor(Math.random()*2);
-		for (let i = 0; i < map.length; i++){
-			let ch = map.charAt(i);
-			//////console.log(ch);
-			//move either east or west
-			if(ch=='.' ){
-				if(latitude == 0){
-					s = s.ee;
+		let sizeX = Math.round(Math.random()*3) + this.stats.randomSize;
+		let sizeY = Math.round(Math.random()*3) + this.stats.randomSize;
+		for (let k = 0; k < sizeY; k++){
+			if (k != 0){
+				map = map + '$';
+			}
+			for (let i = 0; i < sizeX; i++){
+				if (Math.floor(Math.random()<.5)){
+					map = map + 'o'
 				}else{
-					s = s.ww;
-				}
-			//add shapes	
-			}else if(ch=='*' ){
-				this.mouseSpawnShapes.push(s);
-				if(latitude == 0){
-					s = s.ee;
-				}else{
-					s = s.ww;
-				}
-			//next row 
-			}else if(ch=='|' ){
-				row++;
-				s = oShape;
-				for(let k = 0; k < row; k++){
-					if(longitude == 0){
-						s = s.ss;
-					}else{
-						s = s.nn;
-					}
+					map = map + 'b';
 				}
 			}
 		}
-		
-		
-	  }	
+		//console.log('generate: ' + map);
+		return map;
 	}
+	//Confirm mouse spawn and convert to a creature
+	prepareMouseSpawn(button){
+		// oShape, rleMap, isEast, isSouth
+		let spawn = {};
+		if (this.mouseSpawnShapes.length < 1){
+			this.mouseSpawnButton = button;
+			let x = Math.floor(button.x +button.width);
+			let y = Math.floor(button.y + button.width/2);
+			console.log('Add Spawn: ' + x +','+ y);
+			let s = engine.game.grid.getCloseShape(x,y); 
+			//console.log('SpawnHover: ' +this.mouseSpawnButton.name);
+			let oShape = s;
+			let map = '';
+			switch(button.name){
+				case 'r-Pento':
+				map = engine.game.conway.rPen;
+				break;
+				case 'Acorn':
+				map = engine.game.conway.acorn;
+				break;
+				case 'SpaceShip':
+				map = engine.game.conway.lightWeightSpaceShip;
+				break;
+				case 'Loafer':
+				map = engine.game.conway.loafer;
+				break;
+				case 'Glider':
+				map = engine.game.conway.gun;
+				break;
+				default:
+				map = this.generateRandomSpawn();
+			}
+			spawn.oShape = s;
+			spawn.map = map.slice(0);
+			spawn.isEast = Math.random() < 0.5;
+			spawn.isSouth = Math.random() < 0.5;
+			spawn.isSideways = Math.random() < 0.5;
+			
+		}
+		this.spawn = spawn;
+		this.addMouseSpawn(spawn);
+	}
+	placeMouseSpawn(spawn,x,y){
+		console.log('Start Placement: ' + x + ',' + y);
+		let mouseToGrid = engine.game.grid.getCloseShape(x,y);
+		let oShape = mouseToGrid;
+		let s = oShape;
+		let mapCopy = spawn.map.slice(0);
+		let creature = new Creature (engine.game,mouseToGrid,Math.floor(Math.random()*361),'player');
+		
+		//how many repetitions of birth/dead shapes in a row 
+		let repeat = 0;
+		//randomize E/W and N/S
+		while(mapCopy.length > 0){
+			//console.log(mapCopy);
+			let count = parseInt(mapCopy);
+			//first char of map is not a counter
+			if(isNaN(count)){
+				let ch = mapCopy.substring(0,1);
+				mapCopy = mapCopy.slice(1);
+				//console.log(ch);
+				switch (ch){
+					case '!':
+					break;
+					case 'o':
+					for (let j = 0; j <= repeat; j++){	
+						s.creature.removeShape(s,engine.game.conway.liveShapes);
+						s.life = 1;
+						creature.addShape(s,engine.game.conway.liveShapes);
+						if (spawn.isSideways){
+							s = (spawn.isEast) ? s.ss : s.nn;
+						}else{
+							s = (spawn.isEast) ? s.ee : s.ww;
+						}
+					}
+					repeat = 0;
+					break;
+					case 'b':
+					for (let j = 0; j <= repeat; j++){
+						if (spawn.isSideways){
+							s = (spawn.isEast) ? s.ss : s.nn;
+						}else{
+							s = (spawn.isEast) ? s.ee : s.ww;
+						}
+					}
+					repeat = 0;
+					break;
+					case '$':
+					for (let j = 0; j <= repeat; j++){
+						if (spawn.isSideways){
+							oShape = (spawn.isSouth) ? oShape.ww : oShape.ee;
+						}else{
+							oShape = (spawn.isSouth) ? oShape.ss : oShape.nn;
+						}
+					}
+					s = oShape;
+					repeat = 0;
+					break;
+					default:
+					console.log('rle error');
+				}
+			//discard number and set repeat
+			}else{
+				repeat = count - 1;
+				let chLength = count.toString().length;
+				//console.log('repeat: ' + repeat + '. length: ' + chLength);
+				mapCopy = mapCopy.slice(chLength);
+			}
+		}
+	while(this.mouseSpawnShapes.length > 0){
+		this.mouseSpawnShapes.pop();
+	}		
+	this.stats.isSpawnAvailable = false;
+	this.stats.spawnTimeout = engine.counter + this.stats.spawnInterval;
+	}
+	
+	addMouseSpawn(spawn){
+		let mapCopy = spawn.map.slice(0);
+		let oShape = spawn.oShape;
+		let s = oShape;
+		//how many repetitions of birth/dead shapes in a row 
+		let repeat = 0;
+		//randomize E/W and N/S
+		while(mapCopy.length > 0){
+			//console.log(mapCopy);
+			let count = parseInt(mapCopy);
+			//first char of map is not a counter
+			if(isNaN(count)){
+				let ch = mapCopy.substring(0,1);
+				mapCopy = mapCopy.slice(1);
+				//console.log(ch);
+				switch (ch){
+					case '!':
+					break;
+					case 'o':
+					for (let j = 0; j <= repeat; j++){
+						this.mouseSpawnShapes.push(s);
+						if (spawn.isSideways){
+							s = (spawn.isEast) ? s.ss : s.nn;
+						}else{
+							s = (spawn.isEast) ? s.ee : s.ww;
+						}
+					}
+					repeat = 0;
+					break;
+					case 'b':
+					for (let j = 0; j <= repeat; j++){
+						if (spawn.isSideways){
+							s = (spawn.isEast) ? s.ss : s.nn;
+						}else{
+							s = (spawn.isEast) ? s.ee : s.ww;
+						}
+					}
+					repeat = 0;
+					break;
+					case '$':
+					for (let j = 0; j <= repeat; j++){
+						if (spawn.isSideways){
+							oShape = (spawn.isSouth) ? oShape.ww : oShape.ee;
+						}else{
+							oShape = (spawn.isSouth) ? oShape.ss : oShape.nn;
+						}
+					}
+					s = oShape;
+					repeat = 0;
+					break;
+					default:
+					console.log('rle error');
+				}
+			//discard number and set repeat
+			}else{
+				repeat = count - 1;
+				let chLength = count.toString().length;
+				//console.log('repeat: ' + repeat + '. length: ' + chLength);
+				mapCopy = mapCopy.slice(chLength);
+			}
+		}	
+	}
+	
 	drawMouseSpawn(x,y){
 	  if (this.mouseSpawnShapes.length > 0){	
 		let hsla = engine.vfx.hslaEdit();
@@ -1174,12 +1287,12 @@ class Player{
 		}
 	  }
 	}
-	// if type is int, spawn random of size int 
-	spawn(eggType){
+	// TODO: assign probabilities to different spawns
+	playerAutoSpawn(eggType){
 		let egg = '';
-		let eggs = ['','Crawler','Star','Vine','Spore'];
+		let eggs = ['Acorn','Crawler','Star','Vine','Spore'];
 		if(eggType == null){
-			egg = eggs[Math.floor(Math.random()*eggs.length)];
+			eggType = eggs[Math.floor(Math.random()*eggs.length)];
 		}
 		switch(eggType){
 			case 'Acorn':
@@ -1189,19 +1302,19 @@ class Player{
 			egg = engine.game.conway.gun;
 			break;
 			case 'Star':
-			egg = engine.game.conway.star;
+			egg = engine.game.conway.rPen;
 			break;
 			case 'Vine':
-			egg = engine.game.conway.aircraft;
+			egg = engine.game.conway.hivenudger;
 			break;
 			case 'Spore':
-			egg = engine.game.conway.square;
+			egg = engine.game.conway.lightWeightSpaceShip;
 			break;
 			//eggtype must otherwise be a number
 			default:
-			egg = engine.game.conway.generate(this.stats.randomSize);
 		}
-		engine.game.conway.create(egg,'player');
+		let s = engine.game.grid.getSampleShape();
+		engine.game.conway.assign(s,egg,'player');
 	}
 }
 
@@ -1224,20 +1337,14 @@ class Conway {
 		this.playerPopulation = 0;
 		this.changes = [];	
 		this.creatures = [];
-		this.options = ['star','square','gun','aircraft','random'];
-		this.star = '***|*.*|..*|.**';
-		//this.star = '***';
-		this.square = '**|**';
-		this.gun ='*.*|.**|.*.';
-		//this.gun ='*.*|*..*|*.*';//weighted
-		this.acorn ='..*.....|....*...|.**..***';
-		this.aircraft ='.**.......|.*..*|...**';
-		//found items
-		//'.*1|*4*1|.*1'
-		//'***|*.*|..*|.**'
-		// '*.*.|.**.|*..*'
-		//
-		//
+		this.options = ['gun','loafer','hivenudger','lightWeightSpaceShip','rPen'];
+		
+		this.rPen = 'b2o$2o$bo!';
+		this.acorn = 'bo5b$3bo3b$2o2b3o!';
+		this.lightWeightSpaceShip = 'bo2bo$o4b$o3bo$4o!';
+		this.hivenudger = '4o5bo2bo$o3bo3bo4b$o7bo3bo$bo2bo3b4ob2$5b2o6b$5b2o6b$5b2o6b2$bo2bo3b4ob$o7bo3bo$o3bo3bo4b$4o5bo2bo!';
+		this.gun = 'obo$b2o$bo!';
+		this.loafer = 'b2o2bob2o$o2bo2b2o$bobo$2bo$8bo$6b3o$5bo$6bo$7b2o!';
 	}
 	compute(){
 		this.changes = [];
@@ -1328,7 +1435,7 @@ class Conway {
 			this.conwaySpawn(this.options);
 		}
 		if(engine.counter % engine.game.player.stats.autoSpawnSpeeds[engine.game.player.stats.autoIndex] == 0){
-			engine.game.player.spawn(this.options);
+			this.game.player.playerAutoSpawn();
 		}
 		//get stats before cycle
 		this.refreshPopulation();
@@ -1341,9 +1448,17 @@ class Conway {
 		this.conwayGrowth = this.conwayPopulation - conwayPopulation;
 		this.playerGrowth = this.playerPopulation - playerPopulation;
 		// award player end of cycle gains/losses
-		this.rateOfCurrency = this.game.player.stats.baseIncomeRate*(this.game.player.stats.rateMultiplier + 
-								this.game.player.stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes) + 
-								this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes));
+		//this.rateOfCurrency = this.game.player.stats.baseIncomeRate*(this.game.player.stats.rateMultiplier + 
+		//						this.game.player.stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes) + 
+		//						this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes));
+		let stats = this.game.player.stats;
+		let gain = stats.baseIncomeRate*stats.rateMultiplier;
+		let loss = gain*stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes)
+		let bonus = gain*stats.playerPopBonus*(this.playerPopulation/this.numOfShapes)
+		//						this.game.player.stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes) + 
+		//						this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes))
+		this.rateOfCurrency = gain + bonus + loss;
+		
 		this.game.player.stats.currency += this.rateOfCurrency;
 		
 	}
@@ -1388,18 +1503,18 @@ class Conway {
 	conwaySpawn(options){
 		let s = this.game.grid.getSampleShape();
 		let egg = options[Math.floor(Math.random()*options.length)];
-		if(egg =='star'){
-			this.assign(s,this.star); 
-		}else if(egg == 'square'){
-			this.assign(s,this.square);
-		}else if(egg == 'gun'){
-			this.assign(s,this.gun);
-		}else if(egg == 'random'){
-			this.generate();
+		if(egg =='gun'){
+			this.assign(s,this.gun); 
+		}else if(egg == 'loafer'){
+			this.assign(s,this.loafer);
+		}else if(egg == 'hivenudger'){
+			this.assign(s,this.hivenudger);
+		}else if(egg == 'lightWeightSpaceShip'){
+			this.assign(s,this.lightWeightSpaceShip);
 		}else if(egg == 'acorn'){
 			this.assign(s,this.acorn);
-		}else if(egg == 'aircraft'){
-			this.assign(s,this.aircraft);
+		}else if(egg == 'rPen'){
+			this.assign(s,this.rPen);
 		}else if(egg == 'erase'){
 			this.eraseLive = true;
 		}
@@ -1407,102 +1522,77 @@ class Conway {
 		//game.grid.draw();
 		////console.log(s.show());
 	}
-	make(){
-		this.create(this.star);
-		this.create(this.square);
-		this.create(this.gun);
-		//this.compute();
-	}
-	generate(playerSize){
-		let map = '';
-		let sizeX = Math.round(Math.random()*3) + 2;
-		let sizeY = Math.round(Math.random()*3) + 2;
-		if(playerSize != null){
-			sizeX = Math.round(Math.random()*playerSize) + 2;
-			sizeY = Math.round(Math.random()*playerSize) + 2; 
-		}
-		let row = 0;
-		let s = this.game.grid.getSampleShape(); 
-		for (let k = 0; k < sizeY; k++){
-			if (k != 0){
-				map = map + '|';
-			}
-			for (let i = 0; i < sizeX; i++){
-				if (Math.floor(Math.random()<.5)){
-					map = map + '*'
-				}else{
-					map = map + '.';
-				}
-			}
-		}
-		//console.log('generate: ' + map);
-		if(playerSize != null){
-			return map;
-		}else{
-			this.assign(s,map,null);
-		}
-	}
-	create(map,name){
-		//assign(findSpot(map),map);
-		let s = this.game.grid.getSampleShape()
-		//////console.log('create: ' + s.show());
-		//s.colorRef = game.grid.getColor();
-		this.assign(s,map,name);
 		
-	}
-	
-	
 	
 	assign(oShape,map,name){
 		//console.log('assign: ' + oShape.show())
 		let row = 0;
 		let s = oShape; 
 		let hi = Math.floor(Math.random()*361);
-		let c = new Creature(this.game,oShape,hi,name);
-		this.creatures.push(c);
+		let creature = new Creature(this.game,oShape,hi,name);
+		this.creatures.push(creature);
+		let mapCopy = map.slice(0);
+		let repeat = 0;
+		let isEast = Math.random() < 0.5;
+		let isSouth = Math.random() < 0.5;
+		let	isSideways = Math.random() < 0.5;
 		//randomize E/W and N/S
-		let latitude = Math.floor(Math.random()*2);
-		let longitude = Math.floor(Math.random()*2);
-		for (let i = 0; i < map.length; i++){
-			let ch = map.charAt(i);
-			//////console.log(ch);
-			//move either east or west
-			if(ch=='.' ){
-				if(latitude == 0){
-					s = s.ee;
-				}else{
-					s = s.ww;
+		while(mapCopy.length > 0){
+			//console.log(mapCopy);
+			let count = parseInt(mapCopy);
+			//first char of map is not a counter
+			if(isNaN(count)){
+				let ch = mapCopy.substring(0,1);
+				mapCopy = mapCopy.slice(1);
+				//console.log(ch);
+				switch (ch){
+					case '!':
+					break;
+					case 'o':
+					for (let j = 0; j <= repeat; j++){	
+						s.creature.removeShape(s,this.game.conway.liveShapes);
+						s.life = 1;
+						creature.addShape(s,this.game.conway.liveShapes);
+						if (isSideways){
+							s = (isEast) ? s.ss : s.nn;
+						}else{
+							s = (isEast) ? s.ee : s.ww;
+						}
+					}
+					repeat = 0;
+					break;
+					case 'b':
+					for (let j = 0; j <= repeat; j++){
+						if (isSideways){
+							s = (isEast) ? s.ss : s.nn;
+						}else{
+							s = (isEast) ? s.ee : s.ww;
+						}
+					}
+					repeat = 0;
+					break;
+					case '$':
+					for (let j = 0; j <= repeat; j++){
+						if (isSideways){
+							oShape = (isSouth) ? oShape.ww : oShape.ee;
+						}else{
+							oShape = (isSouth) ? oShape.ss : oShape.nn;
+						}
+					}
+					s = oShape;
+					repeat = 0;
+					break;
+					default:
+					console.log('rle error');
 				}
-			//add liveShapes	
-			}else if(ch=='*' ){
-				s.life = 1;
-				s.hi = hi;
-				//this.liveShapes.push(s);
-				if(s.creature != this.blank){
-					s.creature.removeShape(s,this.liveShapes);
-				}
-				c.addShape(s,this.liveShapes);
-				if(latitude == 0){
-					s = s.ee;
-				}else{
-					s = s.ww;
-				}
-			//next row 
-			}else if(ch=='|' ){
-				row++;
-				s = oShape;
-				for(let k = 0; k < row; k++){
-				if(longitude == 0){
-					s = s.ss;
-				}else{
-					s = s.nn;
-				}
-			}
-			}else{ 
-				////console.log('assign: fail on "' + ch + '"');
+			//discard number and set repeat
+			}else{
+				repeat = count - 1;
+				let chLength = count.toString().length;
+				//console.log('repeat: ' + repeat + '. length: ' + chLength);
+				mapCopy = mapCopy.slice(chLength);
 			}
 		}
-		
 	}
 
 }

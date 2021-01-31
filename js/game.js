@@ -9,8 +9,8 @@ class Game{
 		//must be called after createMenus
 		this.player = new Player();
 		this.conway = new Conway(this);
-		this.conway.conwaySpawn(this.conway.options);
-		this.conway.conwaySpawn(this.conway.options);
+		//this.conway.conwaySpawn(this.conway.options);
+		//this.conway.conwaySpawn(this.conway.options);
 		this.conway.conwaySpawn(this.conway.options);
 	}
 	
@@ -28,8 +28,8 @@ class Game{
 				hudBtn.isVisible = false;
 				m.spawn.isVisible = false;
 				m.spawn.isToggled = false;
-				m.skills.isVisible = false;
-				m.skills.isToggled = false;
+				m.labor.isVisible = false;
+				m.labor.isToggled = false;
 				m.lab.isVisible = false;
 				m.lab.isToggled = false;
 				m.vacate.isVisible = false;
@@ -75,6 +75,8 @@ class Game{
 		}
 	}
 	refreshTopMenu(button){
+		engine.ui.locBtn.value = (100*this.conway.conwayPopulation/this.conway.numOfShapes).toPrecision(2);
+		engine.ui.pctBtn.value = (100*this.conway.playerPopulation/this.conway.numOfShapes).toPrecision(2);
 		let menu = button.parent;
 		switch (button){
 			case menu.currency:
@@ -268,8 +270,8 @@ class Game{
 				button.isHighlight = true;
 			}else{button.isHighlight = false;}
 			break;
-			case menu.hud.skills:
-			for (let item of menu.skills.buttons){
+			case menu.hud.labor:
+			for (let item of menu.labor.buttons){
 				if (item.cost != null && item.cost <= stats.currency){
 					button.isHighlight = true;
 				}
@@ -303,8 +305,8 @@ class Game{
 			case menu.lab:
 			this.refreshLabMenu(button);
 			break;
-			//skills falls under default for now
-			case menu.skills:
+			//labor falls under default for now
+			case menu.labor:
 			if (button.cost != null){
 				if(button.cost > 99999){
 					button.value = button.cost.toPrecision(2);
@@ -329,8 +331,8 @@ class Game{
 				case menu.hud.spawn:
 				menu.spawn.isVisible = true;
 				break;
-				case menu.hud.skills:
-				menu.skills.isVisible = true;
+				case menu.hud.labor:
+				menu.labor.isVisible = true;
 				break;
 				case menu.hud.lab:
 				menu.lab.isVisible = true;
@@ -363,8 +365,8 @@ class Game{
 				case menu.hud.spawn:
 				menu.spawn.isToggled = !menu.spawn.isToggled;
 				break;
-				case menu.hud.skills:
-				menu.skills.isToggled = !menu.skills.isToggled;
+				case menu.hud.labor:
+				menu.labor.isToggled = !menu.labor.isToggled;
 				break;
 				case menu.hud.lab:
 				menu.lab.isToggled = !menu.lab.isToggled;
@@ -413,65 +415,66 @@ class Game{
 		//Menu constructor(name,x,y,width,height,hue,sat,lum,alp)
 		
 		
-		ui.menu.spawn = new Menu('Spawn',0,0,10,100,55,53,29,0.7);
+		ui.menu.spawn = new Menu('Spawn',0,0,11,100,55,53,29,0.7);
 		let spawn = ui.menu.spawn;
 		ui.menus.push(spawn);
 		spawn.isHover = true;
 		spawn.isVisible = false;
-		spawn.rPen = spawn.createButton('r-Pento',2,17,7,6,    290,100,60,1.0);
-		spawn.crawler = spawn.createButton('Acorn',2,29,7,6,315,100,60,1.0);
-		spawn.star = spawn.createButton('SpaceShip',2,41,7,6,      340,100,60,1.0);
-		spawn.vine = spawn.createButton('Loafer',2,53,7,6,        5,100,60,1.0);
-		spawn.spore = spawn.createButton('Glider',2,65,7,6,     30,100,60,1.0);
-		spawn.random = spawn.createButton('Random',2,77,7,6,   45,100,60,1.0);
+		spawn.rPen = spawn.createButton('r-Pento',1,17,9,6,    290,100,60,1.0);
+		spawn.acorn = spawn.createButton('Acorn',1,29,9,6,315,100,60,1.0);
+		spawn.copperhead = spawn.createButton('Copperhead',1,41,9,6,        5,100,60,1.0);
+		spawn.fish = spawn.createButton('Fish',1,53,9,6,      340,100,60,1.0);
+		spawn.glider = spawn.createButton('Glider',1,65,9,6,     30,100,60,1.0);
+		spawn.random = spawn.createButton('Random',1,77,9,6,   45,100,60,1.0);
 		spawn.rPen.isVisible = false;
-		spawn.crawler.isVisible = false;
-		spawn.star.isVisible = false;
-		spawn.vine.isVisible = false;
+		spawn.acorn.isVisible = false;
+		spawn.fish.isVisible = false;
+		spawn.copperhead.isVisible = false;
 		
 		
 		
-		x = 10;
+		x = 11;
 		w = 22;
 		s = 7;
 		y1 = 45;
 		r = 3.5;
-		bw =7;
-		ui.menu.skills = new Menu('Skills',x,0,w,100,55,53,29,0.7);
-		let skills = ui.menu.skills;
-		ui.menus.push(skills);
-		skills.isHover = true;
-		skills.isVisible = false;
+		bw =9.6;
+		ui.menu.labor = new Menu('Skills',x,0,w,100,55,53,29,0.7);
+		let labor = ui.menu.labor;
+		labor.hoverText.push('Husks of dead infections litter','the ground, while the living','irratically swarm the','air surrounding you.');
+		ui.menus.push(labor);
+		labor.isHover = true;
+		labor.isVisible = false;
 		y = y1;
-		skills.craftDouble = skills.createButton('Craft',x+w/2-4,y,8,6,177,96,78,1.0);
-		skills.craftDouble.hoverText.push('Double Amount of','Distance Points','Gained each Cycle.');
-		skills.craft1 = skills.createButton('Hat',x+1,y+s,bw,6,177,96,78,1.0);
-		skills.craft1.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
-		skills.craft2 = skills.createButton('Gloves',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		skills.craft2.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
-		skills.craft3 = skills.createButton('Mask',x+1,y+2*s,bw,6,177,96,78,1.0);
-		skills.craft3.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
-		skills.craft4 = skills.createButton('Shield',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
-		skills.craft4.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
+		labor.craftDouble = labor.createButton('Tailoring',x+w/2-4,y,bw,6,177,96,78,1.0);
+		labor.craftDouble.hoverText.push('Double Amount of','Distance Points','Gained each Cycle.');
+		labor.craft1 = labor.createButton('Hat',x+1,y+s,bw,6,177,96,78,1.0);
+		labor.craft1.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
+		labor.craft2 = labor.createButton('Gloves',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		labor.craft2.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
+		labor.craft3 = labor.createButton('Mask',x+1,y+2*s,bw,6,177,96,78,1.0);
+		labor.craft3.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
+		labor.craft4 = labor.createButton('Shield',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		labor.craft4.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
 		
 		y = y1+r*s
-		skills.skillDouble = skills.createButton('Skill',x+w/2-4,y,8,6,177,96,78,1.0);
-		skills.skillDouble.hoverText.push('Reduce delay between','Spawning Disinfecting','Agents into the air.');
-		skills.skill1 = skills.createButton('Reflex',x+1,y+s,bw,6,177,96,78,1.0);
-		skills.skill1.hoverText.push('Increase Bonus:','Income is increased more','for each disinfeccting agent.');
-		skills.skill2 = skills.createButton('Strength',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		skills.skill2.hoverText.push('Increase Bonus:','Income is increased more','for each disinfeccting agent.');
-		skills.skill3 = skills.createButton('Planning',x+1,y+2*s,bw,6,177,96,78,1.0);
-		skills.skill3.hoverText.push('Increase Bonus:','Income is increased more','for each disinfeccting agent.');
-		skills.skill4 = skills.createButton('Agility',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
-		skills.skill4.hoverText.push('Increase Bonus:','Income is increased more','for each disinfeccting agent.');
+		labor.mouseSpawnDelay = labor.createButton('Engineering',x+w/2-4,y,bw,6,177,96,78,1.0);
+		labor.mouseSpawnDelay.hoverText.push('Reduce delay between','Spawning Disinfecting','Agents into the air.');
+		labor.skill1 = labor.createButton('Aquarium',x+1,y+s,bw,6,177,96,78,1.0);
+		labor.skill1.hoverText.push('Unlock Disinfecting Agent:','Fish Agents are','formed with husks and','a little algae to grow on.');
+		labor.skill2 = labor.createButton('Sun Rock',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		labor.skill2.hoverText.push('Unlock Disinfecting Agent:','Copperhead Agents bask','in the warmth of day','and slide in the shadow of night.');
+		labor.skill3 = labor.createButton('Oak Bonsai',x+1,y+2*s,bw,6,177,96,78,1.0);
+		labor.skill3.hoverText.push('Unlock Disinfecting Agent:','Acorn Agents will','surprise any enemy with','their amazing growth.');
+		labor.skill4 = labor.createButton('Textbooks',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		labor.skill4.hoverText.push('Unlock Disinfecting Agent:','R-Penimino... Napoleon','Bonaparte has got nothing','on this little over-achiever.');
 		
-		x = 32;
-		w = 22;
+		x += w;
+		//w = 22;
 		s = 7;
 		//y1 = 23;
 		r = 3.5;
-		bw =9;
+		//bw =9;
 		ui.menu.lab = new Menu('lab',x,0,w,100,55,53,29,0.7);
 		let lab = ui.menu.lab;
 		ui.menus.push(lab);
@@ -483,14 +486,14 @@ class Game{
 		lab.materialTotal = lab.createButton('Mat. Total',x+w-1-bw,yHeader,bw,6,177,96,78,1.0);
 		lab.renovate = lab.createButton('Renovate Laboratory',x+w/2-bw,yHeader+ 1.4*s,bw*2,6,177,96,78,1.0);
 		lab.renovate.hoverText.push('Tear it all down and build a','better laboratory. Collect','Material: Cubic Root of','(Distance Points/10).');
-		lab.unlock = lab.createButton('New Spawn',x+1,y,bw,6,177,96,78,1.0);
-		lab.unlock.hoverText.push('Discover a new','disinfecting agent','bred for fighting infections.');
+		lab.tripler = lab.createButton('Triple Points',x+1,y,bw,6,177,96,78,1.0);
+		lab.tripler.hoverText.push('Triple Distance Points','Husk dodger... survivor...','got the skills to be the wiser.');
 		lab.spawn = lab.createButton('Auto Spawn',x+w-1-bw,y,bw,6,177,96,78,1.0);
 		lab.spawn.hoverText.push('Release agents into the air','on a continuous basis.');
-		lab.craft = lab.createButton('Auto Craft',x+1,y+s,bw,6,177,96,78,1.0);
-		lab.craft.hoverText.push('Automatically Double Crafting,','increasing income','when affordable.');
-		lab.skill = lab.createButton('Auto Skill',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		lab.skill.hoverText.push('Automatically Double Skills,','increasing income','when affordable.');
+		lab.craft = lab.createButton('Treadle Desk',x+1,y+s,bw,6,177,96,78,1.0);
+		lab.craft.hoverText.push('Genuine Sunger-Brand sewing','table! Push pedal to metal and','increase Tailoring','skill when affordable.');
+		lab.skill = lab.createButton('Microbiology',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		lab.skill.hoverText.push('Bridge the gap between inventor,','and life-creator. Increase','Engineering skill when affordable.');
 		
 		y = y1+s+2;
 		lab.craft1 = lab.createButton('Hat Rack',x+1,y+s,bw,6,177,96,78,1.0);
@@ -502,21 +505,21 @@ class Game{
 		lab.craft4 = lab.createButton('Wood Shop',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		lab.craft4.hoverText.push('A proper place to store tools.','A shield is only an inch of','sawdust away at any moment.','Keep a shield after lab renovations.');
 		y = y1+r*s;
-		lab.skill1 = lab.createButton('Dodge Ball',x+1,y+s,bw,6,177,96,78,1.0);
-		lab.skill1.hoverText.push('Modify the air vents to',' randomly fire husks at you','as you work. Keep Reflex skills',' after lab renovations.');
-		lab.skill2 = lab.createButton('Dead Lift',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		lab.skill2.hoverText.push('How many husks could a husk','hulk hoist? Hundred','o husk? Keep Strength',' after lab renovations.');
-		lab.skill3 = lab.createButton('Cubicle',x+1,y+2*s,bw,6,177,96,78,1.0);
-		lab.skill3.hoverText.push('Think out of the box,',' in your new cube! Keep Planning','skills after lab renovations.');
-		lab.skill4 = lab.createButton('Limbo Stick',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
-		lab.skill4.hoverText.push('It is a party, and *you* are invited.','Keep limber during free time and','Agility skills after lab renovations.');
+		lab.skill1 = lab.createButton('Koi Pond',x+1,y+s,bw,6,177,96,78,1.0);
+		lab.skill1.hoverText.push('Dedicate space for an indoor','pond. Keep the Aquarium on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		lab.skill2 = lab.createButton('Sun Roof',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		lab.skill2.hoverText.push('Open up the ceiling, let the light in.','Keep the Sun Rock on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		lab.skill3 = lab.createButton('Arboretum',x+1,y+2*s,bw,6,177,96,78,1.0);
+		lab.skill3.hoverText.push('Spare the Bonsai from the','demolition dust. Keep Bonsai on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		lab.skill4 = lab.createButton('Cubicle',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		lab.skill4.hoverText.push('Think out of the box, in your','new cube! Keep Textbooks on','Renovation and increase','the Disinfect Bonus of each Agent.');
 		
-		x = 53.9;
-		w = 22;
+		x += w;
+		//w = 22;
 		s = 7;
 		//y1 = 23;
 		r = 3.5;
-		bw =7;
+		//bw =7;
 		ui.menu.ascend = new Menu('ascend',x,0,w,100,55,53,29,0.7);
 		let ascend = ui.menu.ascend;
 		ui.menus.push(ascend);
@@ -532,18 +535,22 @@ class Game{
 		ascend.craft4 = ascend.createButton('Glove',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		
 		y = y1+r*s
-		ascend.skillDouble = ascend.createButton('Skill',x+w/2-4,y,8,6,177,96,78,1.0);
-		ascend.skill1 = ascend.createButton('Reflex',x+1,y+s,bw,6,177,96,78,1.0);
-		ascend.skill2 = ascend.createButton('Strength',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		ascend.skill3 = ascend.createButton('Planing',x+1,y+2*s,bw,6,177,96,78,1.0);
-		ascend.skill4 = ascend.createButton('Agility',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		ascend.mouseSpawnDelay = ascend.createButton('Skill',x+w/2-4,y,8,6,177,96,78,1.0);
+		ascend.skill1 = ascend.createButton('Dodge Ball',x+1,y+s,bw,6,177,96,78,1.0);
+		ascend.skill1.hoverText.push('Modify the air vents to',' randomly fire husks at you','as you work. Keep Reflex labor',' after lab renovations.');
+		ascend.skill2 = ascend.createButton('Dead Lift',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		ascend.skill2.hoverText.push('How many husks could a husk','hulk hoist? Hundred','o husk? Keep Strength',' after lab renovations.');
+		ascend.skill3 = ascend.createButton('Cubicle',x+1,y+2*s,bw,6,177,96,78,1.0);
+		ascend.skill3.hoverText.push('Think out of the box,',' in your new cube! Keep Planning','labor after lab renovations.');
+		ascend.skill4 = ascend.createButton('Limbo Stick',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		ascend.skill4.hoverText.push('It is a party, and *you* are invited.','Keep limber during free time and','Agility labor after lab renovations.');
 		
-		x = 75.8;
-		w = 22;
+		x += w;
+		//w = 22;
 		s = 7;
 		//y1 = 23;
 		r = 3.5;
-		bw =7;
+		//bw =7;
 		ui.menu.vacate = new Menu('vacate',x,0,w,100,55,53,29,0.7);
 		let vacate = ui.menu.vacate;
 		ui.menus.push(vacate);
@@ -557,7 +564,7 @@ class Game{
 		vacate.craft4 = vacate.createButton('Glove',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		
 		y = y1+r*s
-		vacate.skillDouble = vacate.createButton('Skill',x+w/2-4,y,8,6,177,96,78,1.0);
+		vacate.mouseSpawnDelay = vacate.createButton('Skill',x+w/2-4,y,8,6,177,96,78,1.0);
 		vacate.skill1 = vacate.createButton('Reflex',x+1,y+s,bw,6,177,96,78,1.0);
 		vacate.skill2 = vacate.createButton('Strength',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
 		vacate.skill3 = vacate.createButton('Planing',x+1,y+2*s,bw,6,177,96,78,1.0);
@@ -596,12 +603,11 @@ class Game{
 		ui.menus.push(hud);
 		hud.isVisible = true;
 		hud.spawn = hud.createButton('Spawn',0,93,8,6,70,96,78,1.0);
-		hud.skills = hud.createButton('Skills',17,93,8,6,95,96,78,1.0);
-		hud.lab = hud.createButton('Lab',39,93,8,6,120,96,78,1.0);
-		//hud.ascend = hud.createButton('Ascend',60.9,93,8,6,145,96,78,1.0);
-		//hud.vacate = hud.createButton('Vacate',82.8,93,8,6,170,96,78,1.0);
+		hud.labor = hud.createButton('Skills',18,93,8,6,95,96,78,1.0);
+		hud.lab = hud.createButton('Facilities',40,93,8,6,120,96,78,1.0);
+		hud.ascend = hud.createButton('Ascend',61.9,93,8,6,145,96,78,1.0);
+		hud.vacate = hud.createButton('Vacate',83.8,93,8,6,170,96,78,1.0);
 		hud.settings = hud.createButton('Settings',92,93,8,6,195,96,78,1.0);
-		
 		
 		ui.menu.top = new Menu('Stats',0,0,100,14,55,53,29,0.7);
 		let top = ui.menu.top;
@@ -663,9 +669,6 @@ class Player{
 		
 	}
 	initStats(){
-		this.lockedSpawns = [engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.rPen];
-		//this.lockedSpawns = [engine.ui.menu.spawn.spore, engine.ui.menu.spawn.vine, engine.ui.menu.spawn.star, engine.ui.menu.spawn.crawler, engine.ui.menu.spawn.acorn];
-		
 		this.stats.baseIncomeRate = .10;
 		this.stats.conwayPopBonus = -9;
 		this.stats.playerPopBonus = 10;
@@ -678,20 +681,15 @@ class Player{
 		//TODO: save memory by implementing the messy JSON anyway
 		this.stats.purchases = [];
 		//spawn menu costs
-		//5 leaves spawn.spore visible
+		//5 leaves spawn.glider visible
 		this.stats.lockedSpawnNumber = 5;
 		this.stats.spawnInterval = 100;
 		this.stats.isSpawnAvailable = true;
 		this.stats.spawnTimeout = 0;
-		this.stats.acorn = 0;
-		this.stats.crawler = 0;
-		this.stats.star = 0;
-		this.stats.vine = 0;
-		this.stats.spore = 0;
-		this.stats.random = 0;
+		
 		//craft menu costs
 		this.stats.craftDouble = 200;
-		this.stats.skillDouble = 10;
+		this.stats.mouseSpawnDelay = 10;
 		this.stats.craft1 = 10;
 		this.stats.craft2 = 75;
 		this.stats.craft3 = 300;
@@ -703,7 +701,7 @@ class Player{
 		this.stats.randomSizeCost = 2;
 		//lab menu related values
 		this.stats.labPoints = 0;
-		this.stats.unlockSpawn = 4;
+		this.stats.triplerCost = 4;
 		this.stats.autoSpawn = 4;
 		this.stats.autoSpawnSpeeds = [11000,240,200,180,160];
 		this.stats.autoIndex = 0;
@@ -718,26 +716,18 @@ class Player{
 		this.stats.lab7 = 5;
 		this.stats.lab8 = 6;
 		
+		//lowest percent conway pop allowed to not spawn more
+		this.stats.conwayPopThreshold = 0.06;
+		
+		
 	}
 	applyStats(){
 		let stats = this.stats;
 		let m = engine.ui.menu.spawn;
 		//spawn related
-		//TODO FIX -- move this to if load game below
-		for (let s = 1; s < this.lockedSpawns.length; s++){
-			this.lockedSpawns[this.lockedSpawns.length-s].isVisible = false;
-		}
-		
-		m.rPen.cost = stats.acorn;
-		m.crawler.cost = stats.crawler;
-		m.star.cost = stats.star;
-		m.vine.cost = stats.vine;
-		m.spore.cost = stats.spore;
-		m.random.cost = stats.random;
-		
-		m = engine.ui.menu.skills;
+		m = engine.ui.menu.labor;
 		m.craftDouble.cost = stats.craftDouble;
-		m.skillDouble.cost = stats.skillDouble;
+		m.mouseSpawnDelay.cost = stats.mouseSpawnDelay;
 		m.craft1.cost = stats.craft1;
 		m.craft2.cost = stats.craft2;
 		m.craft3.cost = stats.craft3;
@@ -747,7 +737,7 @@ class Player{
 		m.skill3.cost = stats.skill3;
 		m.skill4.cost = stats.skill4;
 		m.craftDouble.cost = stats.craftDouble;
-		m.skillDouble.isDisabled = false;
+		m.mouseSpawnDelay.isDisabled = false;
 		m.craft1.isDisabled = false;
 		m.craft2.isDisabled = false;
 		m.craft3.isDisabled = false;
@@ -761,7 +751,7 @@ class Player{
 		m.material.value = stats.material;
 		m.materialTotal.value = stats.materialTotal;
 		m.renovate.value = 'Gain ' + stats.labPoints + ' Materials';
-		m.unlock.cost = stats.unlockSpawn;
+		m.tripler.cost = stats.triplerCost;
 		m.spawn.cost = stats.autoSpawn;
 		m.craft.cost = stats.labCraft;
 		m.skill.cost = stats.labSkill;
@@ -773,7 +763,7 @@ class Player{
 		m.skill2.cost = stats.lab6;
 		m.skill3.cost = stats.lab7;
 		m.skill4.cost = stats.lab8;
-		m.unlock.isDisabled = false;
+		m.tripler.isDisabled = false;
 		m.spawn.isDisabled = false;
 		m.craft.isDisabled = false;
 		m.skill.isDisabled = false;
@@ -847,9 +837,7 @@ class Player{
 	//to be called by game cycle to autopurchase affordable
 	autoPurchase(){
 		for (let button of this.autoPurchases){
-			while(this.isAffordable(button)){
 				this.purchase(button,false);
-			}
 		}
 	}
 	
@@ -868,14 +856,14 @@ class Player{
 				cost = 0;
 			}
 			switch (button.parent){
-				case menu.skills:
+				case menu.labor:
 				switch (button){
-					case menu.skills.craftDouble:
+					case menu.labor.craftDouble:
 					this.stats.craftDouble += this.stats.craftDouble*costMultiplier; 
 					this.stats.rateMultiplier += this.stats.rateMultiplier;
 					button.cost = this.stats.craftDouble;
 					break;
-					case menu.skills.skillDouble:
+					case menu.labor.mouseSpawnDelay:
 					this.stats.spawnInterval = Math.floor(this.stats.spawnInterval*0.7);
 					if (this.stats.spawnInterval < 15){
 						this.stats.spawnInterval = 0;
@@ -888,43 +876,43 @@ class Player{
 					//case someMenu.randomSizeButton
 					//this.stats.randomSize += 1;
 					//this.stats.randomSizeCost += this.stats.randomSizeCost*costMultiplier;
-					case menu.skills.craft1:
-					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
+					case menu.labor.skill1:
+					menu.spawn.fish.isVisible = true;
 					this.stats.craft1 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.craft2:
-					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
+					case menu.labor.skill2:
+					menu.spawn.copperhead.isVisible = true;
 					this.stats.craft2 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.craft3:
-					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
+					case menu.labor.skill3:
+					menu.spawn.acorn.isVisible = true;
 					this.stats.craft3 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.craft4:
-					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
+					case menu.labor.skill4:
+					menu.spawn.rPen.isVisible = true;
 					this.stats.craft4 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.skill1:
-					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					case menu.labor.craft1:
+					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
 					this.stats.skill1 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.skill2:
-					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					case menu.labor.craft2:
+					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
 					this.stats.skill2 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.skill3:
-					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					case menu.labor.craft3:
+					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
 					this.stats.skill3 = null;
 					this.disableButton(button);
 					break;
-					case menu.skills.skill4:
-					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					case menu.labor.craft4:
+					this.stats.conwayPopBonus -= 0.25*this.stats.conwayPopBonus;
 					this.stats.skill4 = null;
 					this.disableButton(button);
 					break;
@@ -936,26 +924,20 @@ class Player{
 				//TODO add labCraft and labSkill 
 				switch (button){
 					case menu.lab.craft:
-					this.autoPurchases.push(menu.skills.craftDouble);
+					this.autoPurchases.push(menu.labor.craftDouble);
 					this.disableButton(button);
 					break;
 					case menu.lab.skill:
-					this.autoPurchases.push(menu.skills.skillDouble);
+					this.autoPurchases.push(menu.labor.mouseSpawnDelay);
 					this.disableButton(button);
 					break;
 					case menu.lab.renovate:
 					this.applyLabPrestige(Math.floor(Math.cbrt(this.stats.currency/10)));
 					break;
-					case menu.lab.unlock:
-					if(this.lockedSpawns.length > 0){
-						this.lockedSpawns.shift().isVisible = true;
-						this.stats.unlockSpawn += Math.floor(this.stats.unlockSpawn*costMultiplier);
-						button.cost = this.stats.unlockSpawn;
-					}
-					if(this.lockedSpawns.length < 1){
-						this.stats.unlockSpawn = null;
-						this.disableButton(button)
-					}
+					case menu.lab.tripler:
+					this.stats.rateMultiplier += 2*this.stats.rateMultiplier;
+					this.stats.triplerCost += Math.floor(this.stats.triplerCost*costMultiplier);
+					button.cost = this.stats.triplerCost;
 					break;
 					case menu.lab.spawn:
 					if(this.stats.autoIndex < 4){
@@ -969,66 +951,70 @@ class Player{
 					}
 					break;
 					case menu.lab.craft1:
-					if (menu.skills.craft1.cost != null){
-						this.purchase(menu.skills.craft1,true);
+					if (menu.labor.craft1.cost != null){
+						this.purchase(menu.labor.craft1,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.craft1);
+					this.labPrestigePurchases.push(menu.labor.craft1);
 					this.stats.lab1 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.craft2:
-					if (menu.skills.craft2.cost != null){
-						this.purchase(menu.skills.craft2,true);
+					if (menu.labor.craft2.cost != null){
+						this.purchase(menu.labor.craft2,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.craft2);
+					this.labPrestigePurchases.push(menu.labor.craft2);
 					this.stats.lab2 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.craft3:
-					if (menu.skills.craft3.cost != null){
-						this.purchase(menu.skills.craft3,true);
+					if (menu.labor.craft3.cost != null){
+						this.purchase(menu.labor.craft3,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.craft3);
+					this.labPrestigePurchases.push(menu.labor.craft3);
 					this.stats.lab3 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.craft4:
-					if (menu.skills.craft4.cost != null){
-						this.purchase(menu.skills.craft4,true);
+					if (menu.labor.craft4.cost != null){
+						this.purchase(menu.labor.craft4,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.craft4);
+					this.labPrestigePurchases.push(menu.labor.craft4);
 					this.stats.lab4 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.skill1:
-					if (menu.skills.skill1.cost != null){
-						this.purchase(menu.skills.skill1,true);
+					if (menu.labor.skill1.cost != null){
+						this.purchase(menu.labor.skill1,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.skill1);
+					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					this.labPrestigePurchases.push(menu.labor.skill1);
 					this.stats.lab5 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.skill2:
-					if (menu.skills.skill2.cost != null){
-						this.purchase(menu.skills.skill2,true);
+					if (menu.labor.skill2.cost != null){
+						this.purchase(menu.labor.skill2,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.skill2);
+					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					this.labPrestigePurchases.push(menu.labor.skill2);
 					this.stats.lab6 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.skill3:
-					if (menu.skills.skill3.cost != null){
-						this.purchase(menu.skills.skill3,true);
+					if (menu.labor.skill3.cost != null){
+						this.purchase(menu.labor.skill3,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.skill3);
+					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					this.labPrestigePurchases.push(menu.labor.skill3);
 					this.stats.lab7 = null;
 					this.disableButton(button);
 					break;
 					case menu.lab.skill4:
-					if (menu.skills.skill4.cost != null){
-						this.purchase(menu.skills.skill4,true);
+					if (menu.labor.skill4.cost != null){
+						this.purchase(menu.labor.skill4,true);
 					}
-					this.labPrestigePurchases.push(menu.skills.skill4);
+					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
+					this.labPrestigePurchases.push(menu.labor.skill4);
 					this.stats.lab8 = null;
 					this.disableButton(button);
 					break;
@@ -1113,11 +1099,11 @@ class Player{
 				case 'Acorn':
 				map = engine.game.conway.acorn;
 				break;
-				case 'SpaceShip':
-				map = engine.game.conway.lightWeightSpaceShip;
+				case 'Fish':
+				map = engine.game.conway.fish;
 				break;
-				case 'Loafer':
-				map = engine.game.conway.loafer;
+				case 'Copperhead':
+				map = engine.game.conway.copperhead;
 				break;
 				case 'Glider':
 				map = engine.game.conway.gun;
@@ -1305,10 +1291,10 @@ class Player{
 			egg = engine.game.conway.rPen;
 			break;
 			case 'Vine':
-			egg = engine.game.conway.hivenudger;
+			egg = engine.game.conway.copperhead;
 			break;
 			case 'Spore':
-			egg = engine.game.conway.lightWeightSpaceShip;
+			egg = engine.game.conway.fish;
 			break;
 			//eggtype must otherwise be a number
 			default:
@@ -1320,7 +1306,7 @@ class Player{
 
 class Conway {
 	constructor (game){
-		this.names = ['David','John','Paul','Mark','James','Robert','Stuart','Brian','Kevin','Richard','Neil','Iain','Peter','Graham','Allan','Lee','Anthony','Jonathan','Edward','Matthew','Charles','Alistair','Ronald','Francis','Bruce','Wayne','Adam','Calum','Robin','Greig','Cameron','Adrian','Gerald','Benjamin','Shaun','Campbell','Marcus','Barrie','Liam','Trevor','Lewis','Rory','Arthur','Owen','Jeffrey','Harry','Bernard','Jeremy','Nathan','Julian','Leon','Nigel','Drew','Frazer','Crawford','Gregg','Kerr','Victor','Daryl','Grahame','Maurice','Nicolas','Steve','Nairn','Scot','Warren','Billy','Ralph','Brett','Eoin','Imran','Ivor','Kevan','Robbie','Cornelius','Kristian','Mathew','Moray','Shane','Forbes','Kelvin','Tom','Alfred','Alick','Darryl','Harvey','Kirk','Marshall','Tommy','Wai','Andrea','Daren','Kieron','Luke','Marvin','Ronnie','Torquil','Wallace','Alain','Alec','Arran','Chun','Danny','Declan','Johnston','Keiron','Lloyd','Max','Maxwell','Neville','Reuben','Roberto','Tobias','Todd','Abid','Adnan','Asif','Bjorn','Brydon','Bryn','Carlo','Christien','Clint','Dario','Dustin','Edgar','Elton','Emlyn','Farooq','Gidon','Howard','Irvine','Jaimie','Jeff','Kane','Kashif','Keiran','Leo','Lorn','Lyle','Michel','Nathanael','Nickie','Nicky','Ricky','Ritchie','Robertson','Rowland','Scotland','Sonny','Taylor','Travis','Tristan','Yan','Abdullahi','Adebayo','Adel','Adrain','Alaistair','Alexandre','Alfredo','Alisteir','Amato','Amir','Amit','Andres','Anil','Ann','Antonius','Anwar','Aonghus','Arif','Arnout','Aron','Arvind','Asa','Ashwani','Athol','Azzam','Balraj','Barnabas','Bayne','Bengiman','Bevan','Blythe','Bobby','Carey','Carol','Carreen','Cary','Chi','Chincdu','Chu','Ciaran','Ciaron','Coll','Con','Corin','Cormac','Cullen','Dameon','Danga','Darryn','Davide','Davyd','Dax','Del','Dermot','Diego','Dino','Domenico','Donnie','Donny','Dorino','Eben','Edoardino','Efeoni','El','Elgin','Eoghann','Erl','Fabio','Feargus','Francesco','Francois','Frankie','Frazier','Gardner','Georgio','Gethin','Gianni','Gillan','Gino','Greggory','Grigor','Gurkimat','Gurvinder','Haitham','Hani','Hedley','Hitesh','Hoi','Ifeatu','Iffor','Imtiaz','Islay','Jackson','Jade','Jardine','Jasbir','Jasjeet','Jeremiah','Jerry','Jesse','Jimmy','Jimsheed','Jojeph','Josep','Joshua','Joss','Jreen','Ka','Kai','Kari','Kee','Kelly','Kenrick','Kevyn','Khalid','Kier','Koon','Kristen','Kuldeep','Kurt','Kwasi','Laine','Laychlan','Lenord','Liaqat','Linsay','Lisle','Littlesky','Loumont','Luis','Mandeep','Manmath','Mansel','Maqsood','Marl','Marvan','Marvyn','Maurizio','Mcnamara','Melville','Miles','Milo','Mitchel','Moazzam','Muctarr','Mukendi','Nabil','Naeeh','Naeem','Neale','Neel','Nikolaos','Nishal','O','Obumneme','Odaro','Orest','Orlando','Pamela','Paulo','Pegasus','Piero','Pietro','Pravin','Quintin','Rajesh','Ramesh','Rauri','Raymund','Reay','Reece','Rex','Ritchard','Robertjohn','Rodden','Rohan','Rohit','Russel','Ryan','Sacha','Samir','Sanders','Saqib','Saul','Sebastian','Sergio','Shahed','Shahriar','Shawn','Sheikh','Sheldon','Shuan','Siddharta','Sleem','Solomon','Stevan','Stevie','Stuard','Sufian','Sven','Talal','Tanvir','Tarek','Tarl','Teginder','Thor','Thorfinn','Trebor','Trent','Vikash','Wael','Waheedur','Wanachak','Warner','Wilbs','Wilfred','Willis','Wun','Xavier','Yanik','Younis','Zadjil','Zain','Zeeshan','Zeonard','Zi','Claire','Sharon','Jacqueline','Louise','Sarah','Caroline','Elizabeth','Lorraine','Laura','Lorna','Wendy','Yvonne','Suzanne','Anne','Diane','Helen','Hazel','Andrea','Shona','Kathleen','Melanie','Jill','Leigh','Morag','Lynsey','Debbie','Arlene','Zoe','Mandy','Mhairi','Marion','Lynda','Eileen','Kim','Julia','Alexandra','Irene','Rebecca','Teresa','Adele','Ashley','Moira','Rosemary','Geraldine','Theresa','Agnes','Sheila','Hilary','Sonia','Janette','Gaynor','Veronica','Lyndsay','Susanne','Leona','Joyce','Avril','Josephine','Vanessa','Natasha','Monica','Roslyn','Adrienne','Isabel','Justine','Cara','Eilidh','Gwen','Faye','Naomi','Vicki','Hannah','Lee','Dorothy','Nadine','Sharron','Stacey','Collette','Kerrie','Marlene','Alana','Morna','Carol','Nina','Nyree','Sarah','Johanne','Marina','Nancy','Vivien','Alyson','Ann','Eve','Kellie','Lynette','Nadia','Ingrid','Lea','Senga','Catrina','Constance','Laurie','Lucinda','Mari','Paulene','Vivian','Antonia','Connie','Daniella','Francesca','Kimberly','Lee','May','Roisin','Aimee','Caren','Corrine','Leila','Liza','Madeleine','Myra','Sasha','Tessa','Tricia','Alexa','Amelia','Annabel','Cecilia','Elise','Estelle','Henrietta','Jade','Jeanie','Jody','Kristeen','Lucie','Lucille','Madeline','Nora','Sheryl','Shiona','Stella','Ailie','Allyson','Carol','Caron','Cathleen','Evonne','Holly','Johann','Karan','Kristine','Leeann','Lindy','Marissa','Norah','Rhian','Saira','Shauna','Susannah','Trudi','Vanda','Vickie','Ainsley','Ainslie','Camilla','Cathryn','Corinna','Corrina','Cristina','Della','Gabrielle','Greer','Imogen','Iris','Ishbel','Jeannette','Katrine','Kirsta','Kirstien','Kristen','Kyra','Lena','Liana','Parveen','Polly','Rita','Shane','Sheona','Suzanna','Vera','Allanna','Anji','Annamarie','Ava','Ayshea','Briony','Carey','Carolynn','Catharine','Ceri','Chelsey','Cheryll','Clayre','Courtney','Debbi','Dian','Donella','Elsie','Esme','Faith','Farhat','Flora','Haley','Hester','Inga','Ivonne','Janeen','Jaqueline','Jodie','Karis','Karrie','Katheryn','Kirstene','Kirsti','Kylie','Lauraine','Lenore','Letitia','Liane','Linzie','Lorena','Loretta','Mai','Margot','Marney','Marni','Maura','Maya','Mhari','Mylene','Nicki','Nickola','Nicolle','Nirmal','Pamella','Reena','Renee','Robert','Robina','Rosanna','Rupinder','Samina','Selena','Shaheen','Shareen','Sorcha','Tracie','Uzma','Wai','Yolanda','Abadah','Adel','Adelle','Adriana','Aimie','Aisling','Alain','Aline','Alka','Alvina','Alvise','Alwyn','Amand','Amita','Andromeda','Andwina','Aness','Angelle','Anisa','Anna','Anna','Annamaria','Anwar','Anya','Ara','Areena','Arline','Arshaluse','Ashley','Asra','Atinuke','Audra','Ayeshea','Barbara','Benedicte','Beverlee','Bianca','Billie','Bobbie','Breigh','Brian','Brigid','Caira','Cairan','Cara','Caralynn','Carlanne','Carlene','Carli','Carn','Carriean','Caryn','Carys','Caterina','Catherin','Catrona','Celesbial','Charelle','Charity','Charline','Cherise','Cherris','Cheryline','Christan','Christel','Cirsty','Clara','Clare','Cleonie','Colina','Correen','Correne','Corrinna','Cynthia','Cyrena','Dalia','Darlaine','Davidina','Dawna','Dawnna','Debbie','Deeba','Delphine','Dena','Devinder','Deziree','Diahann','Dominie','Doranne','Doris','Dulsie','Ebru','Edele','Eilaine','Elaina','Eleanora','Elishia','Elizabeth','Eloisa','Ema','Emma','Emma','Emmeline','Fadelma','Faheem','Farhana','Fehmeeda','Finan','Frances','Freda','Frosoulla','Fyona','Gaynore','Genene','George','Georgine','Gerda','Ghzala','Giselle','Gordina','Gulseren','Gwyneth','Hailey','Hamsa','Harjean','Hedda','Hilda','Hind','Honey','Honor','Ifeoma','Ilse','Imose','Innes','Irena','Ishabel','Jacinta','Jackeline','Jackson','Jacquelynn','Janeane','Janetta','Janferie','Jasmina','Jaswant','Jenefer','Jenna','Jetta','Jinny','Joe','Johane','Johnanna','Jorie','Joy','Juniper','Kae','Kamaljit','Karena','Karima','Karlene','Karlin','Katerina','Katha','Katrien','Katrinaa','Kavil','Keeley','Keir','Kerky','Kerray','Kerrie','Kerryann','Kerstin','Kirstein','Kirstin','Kjersti','Krischa','Kristan','Lada','Lalita','Larna','Lasuru','Lauri','Layna','Leagh','Leanda','Leighann','Lela','Lene','Lesleyanne','Lewelle','Lian','Lillias','Lina','Linn','Lisa','Lorain','Loramay','Lori','Lorinda','Lorna','Louis','Luan','Luciene','Lyndie','Lynn','Mabel','Machala','Madelene','Madelyn','Maimoona','Mairi','Mairi','Malize','Mamtaz','Manal','Marcell','Marellen','Marguerite','Mari','Marianna','Marie','Marie','Marilynn','Marla','Marnee','Marsa','Marsali','Marshalee','Mary','Mary','Mei','Mel','Melainie','Melisa','Melonie','Melysa','Merrilie','Millicent','Min','Mina','Mira','Mirrisa','Muala','Murdette','Mutch','Myriam','Nanvula','Nanze','Narene','Nasreen','Natalina','Nazma','Nhairi','Nicholina','Nirvana','Noeleen','Noha','Noreena','Nuzhat','Oenone','Oi','Olufunmilayo','Omanda','Orainne','Orla','Paula','Perdita','Pesar','Petre','Pilar','Pippa','Pui','Pulwander','Rabiah','Radha','Rajwant','Rakhi','Rani','Raynald','Rennie','Rhiannon','Rhianwen','Rhowan','Roistn','Rosaline','Rosalynd','Roseleen','Rosheen','Rosie','Rozan','Rozanne','Saara','Sabina','Sabreena','Safiya','Sajdah','Sajida','Sajni','Salena','Samfya','Sangeeta','Sara','Sara','Saskia','Scho','Seleena','Sengul','Shagofta','Shahana','Shaher','Shahnaz','Shaidh'];
+		this.names = ['David','John','Paul','Mark','James','Robert','Stuart','Brian','Kevin','Richard','Neil','Iain','Peter','Graham','Allan','Lee','Anthony','Jonathan','Edward','Matthew','Charles','Alistair','Ronald','Francis','Bruce','Wayne','Adam','Calum','Robin','Greig','Cameron','Adrian','Gerald','Benjamin','Shaun','Campbell','Marcus','Barrie','Liam','Trevor','Lewis','Rory','Arthur','Owen','Jeffrey','Harry','Bernard','Jeremy','Nathan','Julian','Leon','Nigel','Drew','Frazer','Crawford','Gregg','Kerr','Victor','Daryl','Grahame','Maurice','Nicolas','Steve','Nairn','Scot','Warren','Billy','Ralph','Brett','Eoin','Imran','Ivor','Kevan','Robbie','Cornelius','Kristian','Mathew','Moray','Shane','Forbes','Kelvin','Tom','Alfred','Alick','Darryl','Harvey','Kirk','Marshall','Tommy','Wai','Andrea','Daren','Kieron','Luke','Marvin','Ronnie','Torquil','Wallace','Alain','Alec','Arran','Chun','Danny','Declan','Johnston','Keiron','Lloyd','Max','Maxwell','Neville','Reuben','Roberto','Tobias','Todd','Abid','Adnan','Asif','Bjorn','Brydon','Bryn','Carlo','Christien','Clint','Dario','Dustin','Edgar','Elton','Emlyn','Farooq','Gidon','Howard','Ircopperhead','Jaimie','Jeff','Kane','Kashif','Keiran','Leo','Lorn','Lyle','Michel','Nathanael','Nickie','Nicky','Ricky','Ritchie','Robertson','Rowland','Scotland','Sonny','Taylor','Travis','Tristan','Yan','Abdullahi','Adebayo','Adel','Adrain','Alaistair','Alexandre','Alfredo','Alisteir','Amato','Amir','Amit','Andres','Anil','Ann','Antonius','Anwar','Aonghus','Arif','Arnout','Aron','Arvind','Asa','Ashwani','Athol','Azzam','Balraj','Barnabas','Bayne','Bengiman','Bevan','Blythe','Bobby','Carey','Carol','Carreen','Cary','Chi','Chincdu','Chu','Ciaran','Ciaron','Coll','Con','Corin','Cormac','Cullen','Dameon','Danga','Darryn','Davide','Davyd','Dax','Del','Dermot','Diego','Dino','Domenico','Donnie','Donny','Dorino','Eben','Edoardino','Efeoni','El','Elgin','Eoghann','Erl','Fabio','Feargus','Francesco','Francois','Frankie','Frazier','Gardner','Georgio','Gethin','Gianni','Gillan','Gino','Greggory','Grigor','Gurkimat','Gurvinder','Haitham','Hani','Hedley','Hitesh','Hoi','Ifeatu','Iffor','Imtiaz','Islay','Jackson','Jade','Jardine','Jasbir','Jasjeet','Jeremiah','Jerry','Jesse','Jimmy','Jimsheed','Jojeph','Josep','Joshua','Joss','Jreen','Ka','Kai','Kari','Kee','Kelly','Kenrick','Kevyn','Khalid','Kier','Koon','Kristen','Kuldeep','Kurt','Kwasi','Laine','Laychlan','Lenord','Liaqat','Linsay','Lisle','Littlesky','Loumont','Luis','Mandeep','Manmath','Mansel','Maqsood','Marl','Marvan','Marvyn','Maurizio','Mcnamara','Melville','Miles','Milo','Mitchel','Moazzam','Muctarr','Mukendi','Nabil','Naeeh','Naeem','Neale','Neel','Nikolaos','Nishal','O','Obumneme','Odaro','Orest','Orlando','Pamela','Paulo','Pegasus','Piero','Pietro','Pravin','Quintin','Rajesh','Ramesh','Rauri','Raymund','Reay','Reece','Rex','Ritchard','Robertjohn','Rodden','Rohan','Rohit','Russel','Ryan','Sacha','Samir','Sanders','Saqib','Saul','Sebastian','Sergio','Shahed','Shahriar','Shawn','Sheikh','Sheldon','Shuan','Siddharta','Sleem','Solomon','Stevan','Stevie','Stuard','Sufian','Sven','Talal','Tanvir','Tarek','Tarl','Teginder','Thor','Thorfinn','Trebor','Trent','Vikash','Wael','Waheedur','Wanachak','Warner','Wilbs','Wilfred','Willis','Wun','Xavier','Yanik','Younis','Zadjil','Zain','Zeeshan','Zeonard','Zi','Claire','Sharon','Jacqueline','Louise','Sarah','Caroline','Elizabeth','Lorraine','Laura','Lorna','Wendy','Yvonne','Suzanne','Anne','Diane','Helen','Hazel','Andrea','Shona','Kathleen','Melanie','Jill','Leigh','Morag','Lynsey','Debbie','Arlene','Zoe','Mandy','Mhairi','Marion','Lynda','Eileen','Kim','Julia','Alexandra','Irene','Rebecca','Teresa','Adele','Ashley','Moira','Rosemary','Geraldine','Theresa','Agnes','Sheila','Hilary','Sonia','Janette','Gaynor','Veronica','Lyndsay','Susanne','Leona','Joyce','Avril','Josephine','Vanessa','Natasha','Monica','Roslyn','Adrienne','Isabel','Justine','Cara','Eilidh','Gwen','Faye','Naomi','Vicki','Hannah','Lee','Dorothy','Nadine','Sharron','Stacey','Collette','Kerrie','Marlene','Alana','Morna','Carol','Nina','Nyree','Sarah','Johanne','Marina','Nancy','Vivien','Alyson','Ann','Eve','Kellie','Lynette','Nadia','Ingrid','Lea','Senga','Catrina','Constance','Laurie','Lucinda','Mari','Paulene','Vivian','Antonia','Connie','Daniella','Francesca','Kimberly','Lee','May','Roisin','Aimee','Caren','Corrine','Leila','Liza','Madeleine','Myra','Sasha','Tessa','Tricia','Alexa','Amelia','Annabel','Cecilia','Elise','Estelle','Henrietta','Jade','Jeanie','Jody','Kristeen','Lucie','Lucille','Madeline','Nora','Sheryl','Shiona','Stella','Ailie','Allyson','Carol','Caron','Cathleen','Evonne','Holly','Johann','Karan','Kristine','Leeann','Lindy','Marissa','Norah','Rhian','Saira','Shauna','Susannah','Trudi','Vanda','Vickie','Ainsley','Ainslie','Camilla','Cathryn','Corinna','Corrina','Cristina','Della','Gabrielle','Greer','Imogen','Iris','Ishbel','Jeannette','Katrine','Kirsta','Kirstien','Kristen','Kyra','Lena','Liana','Parveen','Polly','Rita','Shane','Sheona','Suzanna','Vera','Allanna','Anji','Annamarie','Ava','Ayshea','Briony','Carey','Carolynn','Catharine','Ceri','Chelsey','Cheryll','Clayre','Courtney','Debbi','Dian','Donella','Elsie','Esme','Faith','Farhat','Flora','Haley','Hester','Inga','Ivonne','Janeen','Jaqueline','Jodie','Karis','Karrie','Katheryn','Kirstene','Kirsti','Kylie','Lauraine','Lenore','Letitia','Liane','Linzie','Lorena','Loretta','Mai','Margot','Marney','Marni','Maura','Maya','Mhari','Mylene','Nicki','Nickola','Nicolle','Nirmal','Pamella','Reena','Renee','Robert','Robina','Rosanna','Rupinder','Samina','Selena','Shaheen','Shareen','Sorcha','Tracie','Uzma','Wai','Yolanda','Abadah','Adel','Adelle','Adriana','Aimie','Aisling','Alain','Aline','Alka','Alvina','Alvise','Alwyn','Amand','Amita','Andromeda','Andwina','Aness','Angelle','Anisa','Anna','Anna','Annamaria','Anwar','Anya','Ara','Areena','Arline','Arshaluse','Ashley','Asra','Atinuke','Audra','Ayeshea','Barbara','Benedicte','Beverlee','Bianca','Billie','Bobbie','Breigh','Brian','Brigid','Caira','Cairan','Cara','Caralynn','Carlanne','Carlene','Carli','Carn','Carriean','Caryn','Carys','Caterina','Catherin','Catrona','Celesbial','Charelle','Charity','Charline','Cherise','Cherris','Cheryline','Christan','Christel','Cirsty','Clara','Clare','Cleonie','Colina','Correen','Correne','Corrinna','Cynthia','Cyrena','Dalia','Darlaine','Davidina','Dawna','Dawnna','Debbie','Deeba','Delphine','Dena','Devinder','Deziree','Diahann','Dominie','Doranne','Doris','Dulsie','Ebru','Edele','Eilaine','Elaina','Eleanora','Elishia','Elizabeth','Eloisa','Ema','Emma','Emma','Emmeline','Fadelma','Faheem','Farhana','Fehmeeda','Finan','Frances','Freda','Frosoulla','Fyona','Gaynore','Genene','George','Georgine','Gerda','Ghzala','Giselle','Gordina','Gulseren','Gwyneth','Hailey','Hamsa','Harjean','Hedda','Hilda','Hind','Honey','Honor','Ifeoma','Ilse','Imose','Innes','Irena','Ishabel','Jacinta','Jackeline','Jackson','Jacquelynn','Janeane','Janetta','Janferie','Jasmina','Jaswant','Jenefer','Jenna','Jetta','Jinny','Joe','Johane','Johnanna','Jorie','Joy','Juniper','Kae','Kamaljit','Karena','Karima','Karlene','Karlin','Katerina','Katha','Katrien','Katrinaa','Kavil','Keeley','Keir','Kerky','Kerray','Kerrie','Kerryann','Kerstin','Kirstein','Kirstin','Kjersti','Krischa','Kristan','Lada','Lalita','Larna','Lasuru','Lauri','Layna','Leagh','Leanda','Leighann','Lela','Lene','Lesleyanne','Lewelle','Lian','Lillias','Lina','Linn','Lisa','Lorain','Loramay','Lori','Lorinda','Lorna','Louis','Luan','Luciene','Lyndie','Lynn','Mabel','Machala','Madelene','Madelyn','Maimoona','Mairi','Mairi','Malize','Mamtaz','Manal','Marcell','Marellen','Marguerite','Mari','Marianna','Marie','Marie','Marilynn','Marla','Marnee','Marsa','Marsali','Marshalee','Mary','Mary','Mei','Mel','Melainie','Melisa','Melonie','Melysa','Merrilie','Millicent','Min','Mina','Mira','Mirrisa','Muala','Murdette','Mutch','Myriam','Nanvula','Nanze','Narene','Nasreen','Natalina','Nazma','Nhairi','Nicholina','Nirvana','Noeleen','Noha','Noreena','Nuzhat','Oenone','Oi','Olufunmilayo','Omanda','Orainne','Orla','Paula','Perdita','Pesar','Petre','Pilar','Pippa','Pui','Pulwander','Rabiah','Radha','Rajwant','Rakhi','Rani','Raynald','Rennie','Rhiannon','Rhianwen','Rhowan','Roistn','Rosaline','Rosalynd','Roseleen','Rosheen','Rosie','Rozan','Rozanne','Saara','Sabina','Sabreena','Safiya','Sajdah','Sajida','Sajni','Salena','Samfya','Sangeeta','Sara','Sara','Saskia','Scho','Seleena','Sengul','Shagofta','Shahana','Shaher','Shahnaz','Shaidh'];
 		this.game = game;
 		this.blank = new Creature(game,game.grid.getMiddleShape(),0,'BLANK');
 		game.grid.initCreatures(this.blank);
@@ -1337,14 +1323,15 @@ class Conway {
 		this.playerPopulation = 0;
 		this.changes = [];	
 		this.creatures = [];
-		this.options = ['gun','loafer','hivenudger','lightWeightSpaceShip','rPen'];
+		this.options = ['gun','loafer','copperhead','fish','rPen'];
 		
 		this.rPen = 'b2o$2o$bo!';
 		this.acorn = 'bo5b$3bo3b$2o2b3o!';
-		this.lightWeightSpaceShip = 'bo2bo$o4b$o3bo$4o!';
+		this.fish = 'bo2bo$o4b$o3bo$4o!';
 		this.hivenudger = '4o5bo2bo$o3bo3bo4b$o7bo3bo$bo2bo3b4ob2$5b2o6b$5b2o6b$5b2o6b2$bo2bo3b4ob$o7bo3bo$o3bo3bo4b$4o5bo2bo!';
 		this.gun = 'obo$b2o$bo!';
 		this.loafer = 'b2o2bob2o$o2bo2b2o$bobo$2bo$8bo$6b3o$5bo$6bo$7b2o!';
+		this.copperhead = 'b2o2b2o$3b2o$3b2o$obo2bobo$o6bo2$o6bo$b2o2b2o$2b4o2$3b2o$3b2o!';
 	}
 	compute(){
 		this.changes = [];
@@ -1431,7 +1418,7 @@ class Conway {
 	
 	runCycle(){
 		//spawns a random creature every 180 frames
-		if(engine.counter % 180 == 0){
+		if(engine.counter % 180 == 0 || (engine.counter % 40 == 0 && this.conwayPopulation/this.numOfShapes < engine.game.player.stats.conwayPopThreshold)){
 			this.conwaySpawn(this.options);
 		}
 		if(engine.counter % engine.game.player.stats.autoSpawnSpeeds[engine.game.player.stats.autoIndex] == 0){
@@ -1453,8 +1440,8 @@ class Conway {
 		//						this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes));
 		let stats = this.game.player.stats;
 		let gain = stats.baseIncomeRate*stats.rateMultiplier;
-		let loss = gain*stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes)
-		let bonus = gain*stats.playerPopBonus*(this.playerPopulation/this.numOfShapes)
+		let loss = gain*stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes);
+		let bonus = gain*stats.playerPopBonus*(this.playerPopulation/this.numOfShapes);
 		//						this.game.player.stats.conwayPopBonus*(this.conwayPopulation/this.numOfShapes) + 
 		//						this.game.player.stats.playerPopBonus*(this.playerPopulation/this.numOfShapes))
 		this.rateOfCurrency = gain + bonus + loss;
@@ -1507,10 +1494,10 @@ class Conway {
 			this.assign(s,this.gun); 
 		}else if(egg == 'loafer'){
 			this.assign(s,this.loafer);
-		}else if(egg == 'hivenudger'){
-			this.assign(s,this.hivenudger);
-		}else if(egg == 'lightWeightSpaceShip'){
-			this.assign(s,this.lightWeightSpaceShip);
+		}else if(egg == 'copperhead'){
+			this.assign(s,this.copperhead);
+		}else if(egg == 'fish'){
+			this.assign(s,this.fish);
 		}else if(egg == 'acorn'){
 			this.assign(s,this.acorn);
 		}else if(egg == 'rPen'){

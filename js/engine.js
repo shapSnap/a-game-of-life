@@ -112,8 +112,8 @@ class Ui{
 		let isMouseOverButton = false;
 		//dev info window - and button examples
 		//gives mouse location in canvas-pov pixels, and in % of canvas width/height
-		this.locBtn.value = ': '+x+','+y;
-		this.pctBtn.value = ': '+Math.round(x/engine.vfx.width*100)+','+Math.round(y/engine.vfx.height*100);
+		//this.locBtn.value = ': '+x+','+y;
+		//this.pctBtn.value = ': '+Math.round(x/engine.vfx.width*100)+','+Math.round(y/engine.vfx.height*100);
 		//tests what visible button is pressed/hovered, if any
 		for (let menu of this.menus){
 			if(menu.isVisible == true){
@@ -277,6 +277,23 @@ class Vfx{
 			this.drawHover(btn);
 		}
 	}
+	drawMenuHover(menu){
+		//console.log('hover: '+btn.name);
+		if(menu.hoverText.length > 0){
+			this.drawRounded(menu.x,menu.height/2.9,menu.width,menu.height/11,menu.buttons[0].hsla,this.buttonRounding);
+			let ctx = this.ctx;
+			ctx.font="14px Georgia";
+			let mHeight = this.ctx.measureText('M').width;
+			ctx.textAlign="center"; 
+			ctx.textBaseline = "middle";
+			ctx.fillStyle = "#000000";
+			let textY = this.height/3.1 + 2*mHeight;
+			for (let line of menu.hoverText){
+				ctx.fillText(line,menu.x + menu.width/2, textY);
+				textY += mHeight;
+			}
+		}
+	}
 	drawHover(btn){
 		//console.log('hover: '+btn.name);
 		if(btn.hoverText.length > 0){
@@ -437,6 +454,7 @@ class Menu{
 		a : alp
 		};
 		this.buttons = [];
+		this.hoverText = [];
 		this.isVisible = true;
 		this.isToggled = false;
 	}
@@ -453,8 +471,15 @@ class Menu{
 	draw(){
 		if (this.isVisible){
 			engine.vfx.drawRounded(this.x,this.y,this.width,this.height,this.hsla,engine.vfx.menuRounding);
+			let isNoHover = true;
 			for (let btn of this.buttons){
 				btn.draw();
+				if (btn.isMouseOver){
+					isNoHover = false;
+				}			
+			}
+			if (isNoHover){
+				engine.vfx.drawMenuHover(this);
 			}
 		}
 	}

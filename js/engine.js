@@ -37,7 +37,7 @@ function cycle(timestamp){
 	//game update logic 
 	engine.game.conway.runCycle();
 	//update dev button: fps
-	engine.ui.fpsBtn.value = engine.fpsCalculated.toPrecision(2);
+	//engine.ui.fpsBtn.value = engine.fpsCalculated.toPrecision(2);
 	
 		
 	//updates button and display gui
@@ -91,19 +91,19 @@ function mouseEventHandler(x,y,mAction){
 	if (!isMouseOverButton){
 		engine.game.handleEvent(x,y,mAction);
 	}
-	engine.vfx.polarColorPicker(x,y,mAction);
+	//engine.vfx.polarColorPicker(x,y,mAction);
 	
 }
 //engine.ui -- holds menus and buttons
 class Ui{
 	constructor(){
-		//merely for iteration
-		this.menus = [];
-		//used to define button rules in game logic
+		//game logic can reference each menu by ui.menuName
 		this.menu = {};
+		//menu also added here for iteration
+		this.menus = [];
 		this.createMenus();
 		//TODO: replace this simple initializer within game logic
-		this.setIsVisible();
+		//this.setIsVisible();
 	}
 	//engine.ui is passed events from engine.js for code readibility
 	//TODO: expand from mouse only to include keyboard events
@@ -143,7 +143,7 @@ class Ui{
 		return isMouseOverButton;
 	}
 	//initialize some menus and buttons as visible
-	setIsVisible(){
+	/*setIsVisible(){
 		this.menu.dev.isVisible = true; 
 		for (let btn of this.menu.dev.buttons){
 			btn.isVisible = true;
@@ -151,27 +151,28 @@ class Ui{
 		
 		//IMPLEMENTATION -- ask game logic what highlights as clickable
 	}
+	*/
 	//visibility is determined via a components draw method
 	draw(){
 		for (let menu of this.menus){
-			if (menu != this.menu.dev) {
+			//if (menu != this.menu.dev) {
 				menu.draw();
-			}
-			this.menu.dev.draw();
+			//}
+			//this.menu.dev.draw();
 		}
 	}
 	//all dem interfaces -- 
 	createMenus(){
 		//Menu constructor(name,x,y,width,height,hue,sat,lum,alp)
-		this.menu.dev = new Menu('Dev',86,0,14,10,55,100,60,1);
-		this.locBtn = this.menu.dev.createButton('LOC',87,2,6,6,177,96,78,1.0);
-		this.pctBtn = this.menu.dev.createButton('%WH',94,2,6,6,177,96,78,1.0);
-		this.fpsBtn = this.menu.dev.createButton('FPS',91,8,6,6,177,96,78,1.0);
+		//this.menu.dev = new Menu('Dev',86,0,14,10,55,100,60,1);
+		//this.locBtn = this.menu.dev.createButton('LOC',87,2,6,6,177,96,78,1.0);
+		//this.pctBtn = this.menu.dev.createButton('%WH',94,2,6,6,177,96,78,1.0);
+		//this.fpsBtn = this.menu.dev.createButton('FPS',91,8,6,6,177,96,78,1.0);
 		//this.typBtn = this.menu.dev.createButton('Type',81,38,6,6,240,96,78,1.0);
 		//this.oBtn = this.menu.dev.createButton('Ori%',81,50,19,6,240,96,78,1.0);
 		//this.dimBtn = this.menu.dev.createButton('Dim%',81,62,19,6,240,96,78,1.0);
 		
-		this.menus.push(this.menu.dev);
+		//this.menus.push(this.menu.dev);
 		
 		
 	}
@@ -247,7 +248,7 @@ class Vfx{
 			theta = 360 + theta;
 		}
 		//console.log(theta);
-		engine.ui.menu.dev.hsla.h = theta;
+		//engine.ui.menu.dev.hsla.h = theta;
 	}
 	drawButton(btn){
 		this.hsla.h = btn.hsla.h;

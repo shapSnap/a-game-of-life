@@ -4,7 +4,7 @@ class Game{
 		this.engine = engine;
 		this.vfx = engine.vfx;
 		this.ctx = engine.vfx.ctx;
-		this.grid = new Grid(this,this.vfx.width,this.vfx.height,14,0);
+		this.grid = new Grid(this,this.vfx.width,this.vfx.height,18,0);
 		this.createMenus(engine.ui);
 		//must be called after createMenus
 		this.player = new Player();
@@ -24,14 +24,14 @@ class Game{
 		//erase hud menus if on settings/start screen
 		let m = engine.ui.menu;
 		for (let hudBtn of engine.ui.menu.hud.buttons){
-			if(m.rules.isVisible && hudBtn != m.hud.settings){
+			if(m.settingsMenu.isVisible){
 				hudBtn.isVisible = false;
 				m.spawn.isVisible = false;
 				m.spawn.isToggled = false;
 				m.labor.isVisible = false;
 				m.labor.isToggled = false;
-				m.lab.isVisible = false;
-				m.lab.isToggled = false;
+				m.safehouse.isVisible = false;
+				m.safehouse.isToggled = false;
 				m.vacate.isVisible = false;
 				m.vacate.isToggled = false;
 			}else{hudBtn.isVisible = true;}
@@ -68,6 +68,7 @@ class Game{
 		}
 	}
 	highlightAffordable(button,currency){
+		let menu = engine.ui.menu;
 		if (button.cost != null & button.cost <= currency){
 			button.isHighlight = true;
 		}else{
@@ -75,8 +76,8 @@ class Game{
 		}
 	}
 	refreshTopMenu(button){
-		engine.ui.locBtn.value = (100*this.conway.conwayPopulation/this.conway.numOfShapes).toPrecision(2);
-		engine.ui.pctBtn.value = (100*this.conway.playerPopulation/this.conway.numOfShapes).toPrecision(2);
+		//engine.ui.locBtn.value = (100*this.conway.conwayPopulation/this.conway.numOfShapes).toPrecision(2);
+		//engine.ui.pctBtn.value = (100*this.conway.playerPopulation/this.conway.numOfShapes).toPrecision(2);
 		let menu = button.parent;
 		switch (button){
 			case menu.currency:
@@ -241,7 +242,19 @@ class Game{
 		let stats = this.player.stats;
 		switch (button){
 			case menu.renovate:
-			button.value = ' And Gain '+ Math.floor(Math.cbrt(stats.currency/10)) + ' Materials';
+			let lowest = 10*(4*4*4);
+			let gain = Math.floor(Math.cbrt(stats.currency/10));
+			let next = gain + 1;
+			if (gain < 4){
+				button.value = 'Need '+ Math.ceil(lowest - stats.currency).toPrecision(2) + ' more Credits';
+				button.isHighlight = false;
+			}else{
+				button.value = ' And Gain '+ Math.floor(stats.baseMaterialRate*Math.cbrt(stats.currency/10)) + ' Materials';
+				button.isHighlight = true;
+			}
+			let gainCost = 10*(gain*gain*gain);
+			button.hoverText.splice(0,button.hoverText.length);
+			button.hoverText.push('Tear it all down and build a','better laboratory.','' + (10*(next*next*next)).toPrecision(2) + ' Distance Credits','earns the next Material point.');	
 			break;
 			case menu.material:
 			button.value = stats.material.toPrecision(2);
@@ -257,16 +270,60 @@ class Game{
 			
 		}
 	}
+	refreshAscendMenu(button){
+		let menu = button.parent;
+		let stats = this.player.stats;
+		switch (button){
+			case menu.ascension:
+			let lowest = 10*(4*4*4);
+			let gain = Math.floor(Math.cbrt(stats.materialTotal/10));
+			let next = gain + 1;
+			if (gain < 4){
+				button.value = 'Need '+ Math.ceil(lowest - stats.materialTotal).toPrecision(2) + ' more Material';
+				button.isHighlight = false;
+			}else{
+				button.value = ' And Gain '+ Math.floor(stats.baseAscendRate*Math.cbrt(stats.materialTotal/10)) + ' Zen';
+				button.isHighlight = true;
+			}
+			let gainCost = 10*(gain*gain*gain);
+			button.hoverText.splice(0,button.hoverText.length);
+			button.hoverText.push('Let go of all Material goods','and gain the benefits of ascension!','' + (10*(next*next*next)).toPrecision(2) + ' Total Material','earns the next Zen point.');	
+			break;
+			case menu.autoRenovate:
+			if(button.cost == null){
+				button.isHighlight = false;
+				button.value = 'for ' + stats.renovateMin;
+			}else{
+				button.value = button.cost;
+				this.highlightAffordable(button,stats.zen);
+			}
+			break;
+			case menu.zen:
+			button.value = stats.zen.toPrecision(2);
+			break;
+			case menu.zenTotal:
+			button.value = stats.zenTotal.toPrecision(2);
+			break;
+			default:
+			if (button.cost != null && button != menu.autoPlus && button != menu.autoMinus){
+				button.value = button.cost;
+				this.highlightAffordable(button,stats.zen);
+			}else{
+				button.value = null;
+			}
+			
+		}
+	}
 	refreshHudMenu(button){
 		let menu = engine.ui.menu;
 		let stats = engine.game.player.stats;
 		button.isHighlight = false;
 		switch (button){
 			case menu.hud.spawn:
-			if(!stats.isSpawnAvailable && stats.spawnTimeout < engine.counter){
-				stats.isSpawnAvailable = true;
+			if(!stats.isSpawnAvaisafehousele && stats.spawnTimeout < engine.counter){
+				stats.isSpawnAvaisafehousele = true;
 			}
-			if(stats.isSpawnAvailable){
+			if(stats.isSpawnAvaisafehousele){
 				button.isHighlight = true;
 			}else{button.isHighlight = false;}
 			break;
@@ -277,8 +334,8 @@ class Game{
 				}
 			}
 			break;
-			case menu.hud.lab:
-			for (let item of menu.lab.buttons){
+			case menu.hud.safehouse:
+			for (let item of menu.safehouse.buttons){
 				if (item.cost != null && item.cost <= stats.material){
 					button.isHighlight = true;
 				}
@@ -294,15 +351,15 @@ class Game{
 			case menu.top:
 			this.refreshTopMenu(button);
 			break;
-			case menu.rules:
+			case menu.settingsMenu:
 			this.refreshRulesMenu(button);
 			break;
 			case menu.spawn:
-			if(this.player.stats.isSpawnAvailable){
+			if(this.player.stats.isSpawnAvaisafehousele){
 				button.isHighlight = true;
 			}else{button.isHighlight = false;}
 			break;
-			case menu.lab:
+			case menu.safehouse:
 			this.refreshLabMenu(button);
 			break;
 			//labor falls under default for now
@@ -318,6 +375,8 @@ class Game{
 			break;
 			case menu.hud:
 			this.refreshHudMenu(button);
+			case menu.ascend:
+			this.refreshAscendMenu(button);
 			default:
 			
 		}
@@ -334,8 +393,8 @@ class Game{
 				case menu.hud.labor:
 				menu.labor.isVisible = true;
 				break;
-				case menu.hud.lab:
-				menu.lab.isVisible = true;
+				case menu.hud.safehouse:
+				menu.safehouse.isVisible = true;
 				break;
 				case menu.hud.ascend:
 				menu.ascend.isVisible = true;
@@ -343,9 +402,9 @@ class Game{
 				case menu.hud.vacate:
 				menu.vacate.isVisible = true;
 				break;
-				case menu.hud.settings:
-				//menu.rules.isVisible = true;
-				break;
+				//case menu.hud.settings:
+				//menu.settingsMenu.isVisible = true;
+				//break;
 				default:
 			}
 			break;
@@ -368,8 +427,8 @@ class Game{
 				case menu.hud.labor:
 				menu.labor.isToggled = !menu.labor.isToggled;
 				break;
-				case menu.hud.lab:
-				menu.lab.isToggled = !menu.lab.isToggled;
+				case menu.hud.safehouse:
+				menu.safehouse.isToggled = !menu.safehouse.isToggled;
 				break;
 				case menu.hud.ascend:
 				menu.ascend.isToggled = !menu.ascend.isToggled;
@@ -377,23 +436,22 @@ class Game{
 				case menu.hud.vacate:
 				menu.vacate.isToggled = !menu.vacate.isToggled;
 				break;
-				case menu.hud.settings:
-				menu.rules.isVisible = !menu.rules.isVisible;
-				break;
 				default:
 			}
 			break;
 			case menu.spawn:
-			if(this.player.stats.isSpawnAvailable){
+			if(this.player.stats.isSpawnAvaisafehousele){
 				this.player.mouseSpawnButton = null;
 			}
 			break;
-			case menu.rules:
+			case menu.settingsMenu:
 			this.toggleRules(button);
 			break;
 			case menu.top:
+			if(button == menu.top.settings){
+				menu.settingsMenu.isVisible = !menu.settingsMenu.isVisible;
+			}
 			break;
-			
 			default:
 				this.player.purchase(button);
 		}
@@ -439,7 +497,7 @@ class Game{
 		y1 = 45;
 		r = 3.5;
 		bw =9.6;
-		ui.menu.labor = new Menu('Skills',x,0,w,100,55,53,29,0.7);
+		ui.menu.labor = new Menu('Labor',x,0,w,100,55,53,29,0.7);
 		let labor = ui.menu.labor;
 		labor.hoverText.push('Husks of dead infections litter','the ground, while the living','irratically swarm the','air surrounding you.');
 		ui.menus.push(labor);
@@ -447,7 +505,7 @@ class Game{
 		labor.isVisible = false;
 		y = y1;
 		labor.craftDouble = labor.createButton('Tailoring',x+w/2-4,y,bw,6,177,96,78,1.0);
-		labor.craftDouble.hoverText.push('Double Amount of','Distance Points','Gained each Cycle.');
+		labor.craftDouble.hoverText.push('Double Amount of','Distance Credits','Gained each Cycle.');
 		labor.craft1 = labor.createButton('Hat',x+1,y+s,bw,6,177,96,78,1.0);
 		labor.craft1.hoverText.push('Reduce Penalty:','Income is reduced less','for each infection present.');
 		labor.craft2 = labor.createButton('Gloves',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
@@ -469,52 +527,53 @@ class Game{
 		labor.skill4 = labor.createButton('Textbooks',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		labor.skill4.hoverText.push('Unlock Disinfecting Agent:','R-Penimino... Napoleon','Bonaparte has got nothing','on this little over-achiever.');
 		
-		x += w;
+		x += w-.1;
 		//w = 22;
 		s = 7;
 		//y1 = 23;
 		r = 3.5;
 		//bw =9;
-		ui.menu.lab = new Menu('lab',x,0,w,100,55,53,29,0.7);
-		let lab = ui.menu.lab;
-		ui.menus.push(lab);
-		lab.isHover = true;
-		lab.isVisible = false;
+		ui.menu.safehouse = new Menu('Safehouse',x,0,w,100,55,53,29,0.7);
+		let safehouse = ui.menu.safehouse;
+		safehouse.hoverText.push('Who knew so many things could','be made from husk material?','Renovate to make safehouse','upgrades with gained Material.');
+		ui.menus.push(safehouse);
+		safehouse.isHover = true;
+		safehouse.isVisible = false;
 		y = y1;
-		lab.material = lab.createButton('Material',x+1,yHeader,bw,6,177,96,78,1.0);
-		lab.material.hoverText.push('Collect Materials to','make additions for','the laboratory.');
-		lab.materialTotal = lab.createButton('Mat. Total',x+w-1-bw,yHeader,bw,6,177,96,78,1.0);
-		lab.renovate = lab.createButton('Renovate Laboratory',x+w/2-bw,yHeader+ 1.4*s,bw*2,6,177,96,78,1.0);
-		lab.renovate.hoverText.push('Tear it all down and build a','better laboratory. Collect','Material: Cubic Root of','(Distance Points/10).');
-		lab.tripler = lab.createButton('Triple Points',x+1,y,bw,6,177,96,78,1.0);
-		lab.tripler.hoverText.push('Triple Distance Points','Husk dodger... survivor...','got the skills to be the wiser.');
-		lab.spawn = lab.createButton('Auto Spawn',x+w-1-bw,y,bw,6,177,96,78,1.0);
-		lab.spawn.hoverText.push('Release agents into the air','on a continuous basis.');
-		lab.craft = lab.createButton('Treadle Desk',x+1,y+s,bw,6,177,96,78,1.0);
-		lab.craft.hoverText.push('Genuine Sunger-Brand sewing','table! Push pedal to metal and','increase Tailoring','skill when affordable.');
-		lab.skill = lab.createButton('Microbiology',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		lab.skill.hoverText.push('Bridge the gap between inventor,','and life-creator. Increase','Engineering skill when affordable.');
+		safehouse.material = safehouse.createButton('Material',x+1,yHeader,bw,6,177,96,78,1.0);
+		safehouse.material.hoverText.push('Collect Materials to','make additions for','the laboratory.');
+		safehouse.materialTotal = safehouse.createButton('Mat. Total',x+w-1-bw,yHeader,bw,6,177,96,78,1.0);
+		safehouse.renovate = safehouse.createButton('Renovate Laboratory',x+w/2-bw,yHeader+ 1.4*s,bw*2,6,177,96,78,1.0);
+		safehouse.renovate.hoverText.push('Tear it all down and build a','better laboratory. Collect','Material: Cubic Root of','(Distance Credits/10).');
+		safehouse.tripler = safehouse.createButton('Triple Points',x+1,y,bw,6,177,96,78,1.0);
+		safehouse.tripler.hoverText.push('Triple Distance Credits','Husk dodger... survivor...','got the skills to be the wiser.');
+		safehouse.spawn = safehouse.createButton('Auto Spawn',x+w-1-bw,y,bw,6,177,96,78,1.0);
+		safehouse.spawn.hoverText.push('Release agents into the air','on a continuous basis.');
+		safehouse.craft = safehouse.createButton('Treadle Desk',x+1,y+s,bw,6,177,96,78,1.0);
+		safehouse.craft.hoverText.push('Genuine Sunger-Brand sewing','table! Push pedal to metal and','increase Tailoring','skill when affordable.');
+		safehouse.skill = safehouse.createButton('Microbiology',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		safehouse.skill.hoverText.push('Bridge the gap between inventor,','and life-creator. Increase','Engineering skill when affordable.');
 		
 		y = y1+s+2;
-		lab.craft1 = lab.createButton('Hat Rack',x+1,y+s,bw,6,177,96,78,1.0);
-		lab.craft1.hoverText.push('Why have you been throwing',' these out? Keep that hat',' after lab renovations.');
-		lab.craft2 = lab.createButton('Natural Oils',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		lab.craft2.hoverText.push('Moist hands, dry air...',' terrible for gloves. Keep gloves',' after lab renovations.');
-		lab.craft3 = lab.createButton('Dry Cleaner',x+1,y+2*s,bw,6,177,96,78,1.0);
-		lab.craft3.hoverText.push('Finally, a way to',' clean masks properly. Keep a mask',' after lab renovations.');
-		lab.craft4 = lab.createButton('Wood Shop',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
-		lab.craft4.hoverText.push('A proper place to store tools.','A shield is only an inch of','sawdust away at any moment.','Keep a shield after lab renovations.');
+		safehouse.craft1 = safehouse.createButton('Hat Rack',x+1,y+s,bw,6,177,96,78,1.0);
+		safehouse.craft1.hoverText.push('Why have you been throwing',' these out? Keep that hat',' after safehouse renovations.');
+		safehouse.craft2 = safehouse.createButton('Natural Oils',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		safehouse.craft2.hoverText.push('Moist hands, dry air...',' terrible for gloves. Keep gloves',' after safehouse renovations.');
+		safehouse.craft3 = safehouse.createButton('Dry Cleaner',x+1,y+2*s,bw,6,177,96,78,1.0);
+		safehouse.craft3.hoverText.push('Finally, a way to',' clean masks properly. Keep a mask',' after safehouse renovations.');
+		safehouse.craft4 = safehouse.createButton('Wood Shop',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		safehouse.craft4.hoverText.push('A proper place to store tools.','A shield is only an inch of','sawdust away at any moment.','Keep a shield after safehouse renovations.');
 		y = y1+r*s;
-		lab.skill1 = lab.createButton('Koi Pond',x+1,y+s,bw,6,177,96,78,1.0);
-		lab.skill1.hoverText.push('Dedicate space for an indoor','pond. Keep the Aquarium on','Renovation and increase','the Disinfect Bonus of each Agent.');
-		lab.skill2 = lab.createButton('Sun Roof',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		lab.skill2.hoverText.push('Open up the ceiling, let the light in.','Keep the Sun Rock on','Renovation and increase','the Disinfect Bonus of each Agent.');
-		lab.skill3 = lab.createButton('Arboretum',x+1,y+2*s,bw,6,177,96,78,1.0);
-		lab.skill3.hoverText.push('Spare the Bonsai from the','demolition dust. Keep Bonsai on','Renovation and increase','the Disinfect Bonus of each Agent.');
-		lab.skill4 = lab.createButton('Cubicle',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
-		lab.skill4.hoverText.push('Think out of the box, in your','new cube! Keep Textbooks on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		safehouse.skill1 = safehouse.createButton('Koi Pond',x+1,y+s,bw,6,177,96,78,1.0);
+		safehouse.skill1.hoverText.push('Dedicate space for an indoor','pond. Keep the Aquarium on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		safehouse.skill2 = safehouse.createButton('Sun Roof',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		safehouse.skill2.hoverText.push('Open up the ceiling, let the light in.','Keep the Sun Rock on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		safehouse.skill3 = safehouse.createButton('Arboretum',x+1,y+2*s,bw,6,177,96,78,1.0);
+		safehouse.skill3.hoverText.push('Spare the Bonsai from the','demolition dust. Keep Bonsai on','Renovation and increase','the Disinfect Bonus of each Agent.');
+		safehouse.skill4 = safehouse.createButton('Cubicle',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		safehouse.skill4.hoverText.push('Think out of the box, in your','new cube! Keep Textbooks on','Renovation and increase','the Disinfect Bonus of each Agent.');
 		
-		x += w;
+		x += w-.1;
 		//w = 22;
 		s = 7;
 		//y1 = 23;
@@ -522,28 +581,37 @@ class Game{
 		//bw =7;
 		ui.menu.ascend = new Menu('ascend',x,0,w,100,55,53,29,0.7);
 		let ascend = ui.menu.ascend;
+		ascend.hoverText.push('Something is holding you back.','Is it a new tool or a giant weapon?','Perhaps just a different way of','looking at the world.');
 		ui.menus.push(ascend);
 		ascend.isHover = true;
 		ascend.isVisible = false;
 		y = y1;
 		ascend.zen = ascend.createButton('Zen',x+1,yHeader,bw,6,177,96,78,1.0);
 		ascend.zenTotal = ascend.createButton('Zen Total',x+w-1-bw,yHeader,bw,6,177,96,78,1.0);
-		ascend.craftDouble = ascend.createButton('Craft',x+w/2-4,y,8,6,177,96,78,1.0);
-		ascend.craft1 = ascend.createButton('Hat',x+1,y+s,bw,6,177,96,78,1.0);
-		ascend.craft2 = ascend.createButton('Shield',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		ascend.craft3 = ascend.createButton('Mask',x+1,y+2*s,bw,6,177,96,78,1.0);
-		ascend.craft4 = ascend.createButton('Glove',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		ascend.ascension = ascend.createButton('Reach Enlightenment',x+w/2-bw,yHeader+ 1.4*s,bw*2,6,177,96,78,1.0);
+		ascend.ascension.hoverText.push('Let go of all Material goods','and gain the benefits of ascension!','Build a new Safehouse that can','contain your new state of being.');
+		
+		//ascend.materialDoubler = ascend.createButton('Boost Reno',x+w/2-4,y,8,6,177,96,78,1.0);
+		//ascend.craft1 = ascend.createButton('Hat',x+1,y+s,bw,6,177,96,78,1.0);
+		//ascend.craft2 = ascend.createButton('Shield',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		//ascend.craft3 = ascend.createButton('Mask',x+1,y+2*s,bw,6,177,96,78,1.0);
+		//ascend.craft4 = ascend.createButton('Glove',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		
 		y = y1+r*s
-		ascend.mouseSpawnDelay = ascend.createButton('Skill',x+w/2-4,y,8,6,177,96,78,1.0);
-		ascend.skill1 = ascend.createButton('Dodge Ball',x+1,y+s,bw,6,177,96,78,1.0);
-		ascend.skill1.hoverText.push('Modify the air vents to',' randomly fire husks at you','as you work. Keep Reflex labor',' after lab renovations.');
-		ascend.skill2 = ascend.createButton('Dead Lift',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
-		ascend.skill2.hoverText.push('How many husks could a husk','hulk hoist? Hundred','o husk? Keep Strength',' after lab renovations.');
-		ascend.skill3 = ascend.createButton('Cubicle',x+1,y+2*s,bw,6,177,96,78,1.0);
-		ascend.skill3.hoverText.push('Think out of the box,',' in your new cube! Keep Planning','labor after lab renovations.');
-		ascend.skill4 = ascend.createButton('Limbo Stick',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
-		ascend.skill4.hoverText.push('It is a party, and *you* are invited.','Keep limber during free time and','Agility labor after lab renovations.');
+		ascend.autoRenovate = ascend.createButton('Auto-Reno',x+w/2-4,y,8,6,177,96,78,1.0);
+		ascend.autoRenovate.hoverText.push('Renovate the Safehouse','for a set amount of','Material, when enough','Distance Credits are earned.');
+		ascend.autoPlus = ascend.createButton('+',x+w/2+4,y,2,3,177,96,78,1.0);
+		ascend.autoPlus.isVisible = false;
+		ascend.autoMinus = ascend.createButton('-',x+w/2+4,y+3,2,3,177,96,78,1.0);
+		ascend.autoMinus.isVisible = false;
+		ascend.keepAllSpawns = ascend.createButton('Biochemist',x+1,y+s,bw,6,177,96,78,1.0);
+		ascend.keepAllSpawns.hoverText.push('Keep all Disinfecting Agents','and the renovations that','support them on Ascension.');
+		ascend.boostCredits = ascend.createButton('Above Danger',x+w-1-bw,y+s,bw,6,177,96,78,1.0);
+		ascend.boostCredits.hoverText.push('Asended beings such as yourself','stride above the denser','hoards of infections.','Double Distance Credits earned.');
+		ascend.keepTreadle = ascend.createButton('SweatShop',x+1,y+2*s,bw,6,177,96,78,1.0);
+		ascend.keepTreadle.hoverText.push('No worries, you have crafted','specialized Agents to do','all the sweating.','Keep Treadle after Ascensions.');
+		ascend.boostMaterial = ascend.createButton('Husk Trap',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
+		ascend.boostMaterial.hoverText.push('Double gained Material from','Renovations. Like a raingutter but','way, way, more gross. Good','thing mindless Agents clean it out.');
 		
 		x += w;
 		//w = 22;
@@ -570,56 +638,57 @@ class Game{
 		vacate.skill3 = vacate.createButton('Planing',x+1,y+2*s,bw,6,177,96,78,1.0);
 		vacate.skill4 = vacate.createButton('Agility',x+w-1-bw,y+2*s,bw,6,177,96,78,1.0);
 		
-		ui.menu.rules = new Menu('rules',0,0,100,100,15,53,29,1);
-		let rules = ui.menu.rules;
-		ui.menus.push(rules);
-		rules.isHover = false;
-		rules.isVisible = false;
-		rules.save = rules.createButton('Save',90,60,6,3,221,100,39,1.0);
-		rules.load = rules.createButton('Load',90,66,6,3,221,100,39,1.0);
-		rules.delSave = rules.createButton('Delete Save',90,72,6,3,221,100,39,1.0);
-		rules.survive = rules.createButton('Survive',86,17,7,3,221,100,39,1.0);
-		rules.birth = rules.createButton('Birth',93,17,7,3,124,100,39,1.0);
-		rules.max = rules.createButton('Max',86,100,10,3,221,100,39,1.0);
-		rules.s1 = rules.createButton('1',90,20,3,3,221,100,39,1.0);
-		rules.b1 = rules.createButton('1',93,20,3,3,124,100,39,1.0);
-		rules.s2 = rules.createButton('2',90,23,3,3,221,100,39,1.0);
-		rules.b2 = rules.createButton('2',93,23,3,3,124,100,39,1.0);
-		rules.s3 = rules.createButton('3',90,26,3,3,221,100,39,1.0);
-		rules.b3 = rules.createButton('3',93,26,3,3,124,100,39,1.0);
-		rules.s4 = rules.createButton('4',90,29,3,3,221,100,39,1.0);
-		rules.b4 = rules.createButton('4',93,29,3,3,124,100,39,1.0);
-		rules.s5 = rules.createButton('5',90,32,3,3,221,100,39,1.0);
-		rules.b5 = rules.createButton('5',93,32,3,3,124,100,39,1.0);
-		rules.s6 = rules.createButton('6',90,35,3,3,221,100,39,1.0);
-		rules.b6 = rules.createButton('6',93,35,3,3,124,100,39,1.0);
-		rules.s7 = rules.createButton('7',90,38,3,3,221,100,39,1.0);
-		rules.b7 = rules.createButton('7',93,38,3,3,124,100,39,1.0);
-		rules.s8 = rules.createButton('8',90,41,3,3,221,100,39,1.0);
-		rules.b8 = rules.createButton('8',93,41,3,3,124,100,39,1.0);
+		ui.menu.settingsMenu = new Menu('settingsMenu',0,0,100,100,15,53,29,1);
+		let settingsMenu = ui.menu.settingsMenu;
+		ui.menus.push(settingsMenu);
+		settingsMenu.isHover = false;
+		settingsMenu.isVisible = false;
+		settingsMenu.save = settingsMenu.createButton('Save',90,60,6,3,221,100,39,1.0);
+		settingsMenu.load = settingsMenu.createButton('Load',90,66,6,3,221,100,39,1.0);
+		settingsMenu.delSave = settingsMenu.createButton('Delete Save',90,72,6,3,221,100,39,1.0);
+		settingsMenu.survive = settingsMenu.createButton('Survive',86,17,7,3,221,100,39,1.0);
+		settingsMenu.birth = settingsMenu.createButton('Birth',93,17,7,3,124,100,39,1.0);
+		settingsMenu.max = settingsMenu.createButton('Max',86,100,10,3,221,100,39,1.0);
+		settingsMenu.s1 = settingsMenu.createButton('1',90,20,3,3,221,100,39,1.0);
+		settingsMenu.b1 = settingsMenu.createButton('1',93,20,3,3,124,100,39,1.0);
+		settingsMenu.s2 = settingsMenu.createButton('2',90,23,3,3,221,100,39,1.0);
+		settingsMenu.b2 = settingsMenu.createButton('2',93,23,3,3,124,100,39,1.0);
+		settingsMenu.s3 = settingsMenu.createButton('3',90,26,3,3,221,100,39,1.0);
+		settingsMenu.b3 = settingsMenu.createButton('3',93,26,3,3,124,100,39,1.0);
+		settingsMenu.s4 = settingsMenu.createButton('4',90,29,3,3,221,100,39,1.0);
+		settingsMenu.b4 = settingsMenu.createButton('4',93,29,3,3,124,100,39,1.0);
+		settingsMenu.s5 = settingsMenu.createButton('5',90,32,3,3,221,100,39,1.0);
+		settingsMenu.b5 = settingsMenu.createButton('5',93,32,3,3,124,100,39,1.0);
+		settingsMenu.s6 = settingsMenu.createButton('6',90,35,3,3,221,100,39,1.0);
+		settingsMenu.b6 = settingsMenu.createButton('6',93,35,3,3,124,100,39,1.0);
+		settingsMenu.s7 = settingsMenu.createButton('7',90,38,3,3,221,100,39,1.0);
+		settingsMenu.b7 = settingsMenu.createButton('7',93,38,3,3,124,100,39,1.0);
+		settingsMenu.s8 = settingsMenu.createButton('8',90,41,3,3,221,100,39,1.0);
+		settingsMenu.b8 = settingsMenu.createButton('8',93,41,3,3,124,100,39,1.0);
 		
 		ui.menu.hud = new Menu('Hud',0,93,100,7,55,53,29,0.7);
 		let hud = ui.menu.hud;
 		ui.menus.push(hud);
 		hud.isVisible = true;
 		hud.spawn = hud.createButton('Spawn',0,93,8,6,70,96,78,1.0);
-		hud.labor = hud.createButton('Skills',18,93,8,6,95,96,78,1.0);
-		hud.lab = hud.createButton('Facilities',40,93,8,6,120,96,78,1.0);
-		hud.ascend = hud.createButton('Ascend',61.9,93,8,6,145,96,78,1.0);
-		hud.vacate = hud.createButton('Vacate',83.8,93,8,6,170,96,78,1.0);
-		hud.settings = hud.createButton('Settings',92,93,8,6,195,96,78,1.0);
+		hud.labor = hud.createButton('Skills',18,93,8,6,130,96,78,1.0);
+		hud.safehouse = hud.createButton('Facilities',40,93,8,6,190,96,78,1.0);
+		hud.ascend = hud.createButton('Ascend',61.9,93,8,6,250,96,78,1.0);
+		hud.vacate = hud.createButton('Vacate',83.8,93,8,6,310,96,78,1.0);
+		hud.vacate.isVisible = false;
 		
 		ui.menu.top = new Menu('Stats',0,0,100,14,55,53,29,0.7);
 		let top = ui.menu.top;
 		ui.menus.push(top);
 		top.isVisible = true;
-		top.currency = top.createButton('Distance Points',4,1,19,6,177,96,78,1.0);
+		top.currency = top.createButton('Distance Credits',4,1,19,6,177,96,78,1.0);
 		top.rateOfCurrency = top.createButton('Gain Rate',4,7,19,6,137,96,78,1.0);
 		//top.currency.isVisible = true;
 		top.bodies = top.createButton('Infected Growths',34,1,19,6,177,96,78,1.0);
 		top.rateOfInfection = top.createButton('Infection Penalty',34,7,19,6,177,96,78,1.0);
 		top.antibodies = top.createButton('Disinfecting Agents',64,1,19,6,177,96,78,1.0);
 		top.rateOfProtection = top.createButton('Disinfect Bonus',64,7,19,6,177,96,78,1.0);
+		top.settings = top.createButton('Options',92,1,8,6,195,96,78,1.0);
 	}
 
 	saveGame(){
@@ -629,11 +698,11 @@ class Game{
 	deleteGame(){
 	localStorage.removeItem("primary");
 	console.log('Save Deleted');
-	this.player.initStats();
-	this.player.applyStats();	
+	//this.player.initStats();
+	//this.player.applyStats();	
 	this.player.stats.currency += 1000000;
-	this.player.stats.materialTotal += 1000;
-	this.player.stats.material += 1000;
+	this.player.stats.materialTotal += 10000;
+	this.player.stats.material += 10000;
 	}
 	loadGame(){
 		let gameJSON = localStorage.getItem("primary");
@@ -663,19 +732,24 @@ class Player{
 		this.mouseSpawnShapes = [];
 		this.squareMap = null;
 		this.mouseSpawnButton = null;
-		this.labPrestigePurchases = [];
+		this.safehousePrestigePurchases = [];
 		//Game cycle will check this list and attempt to purchase button automatically
 		this.autoPurchases = [];
 		
 	}
 	initStats(){
 		this.stats.baseIncomeRate = .10;
+		this.stats.baseMaterialRate = 1;
+		this.stats.baseAscendRate = 1;
 		this.stats.conwayPopBonus = -9;
 		this.stats.playerPopBonus = 10;
 		this.stats.rateMultiplier = 1;
 		this.stats.currency = 0;
+		this.stats.currencyTotal = this.stats.currency;
 		this.stats.material = 0;
 		this.stats.materialTotal = this.stats.material;
+		this.stats.zen = 0;
+		this.stats.zenTotal = this.stats.zen;
 		this.stats.randomSize = 2;
 		//tracks all purchases in order to load or prestige and keep bought items -- does it stupidly to avoid messy Class JSO
 		//TODO: save memory by implementing the messy JSON anyway
@@ -684,7 +758,7 @@ class Player{
 		//5 leaves spawn.glider visible
 		this.stats.lockedSpawnNumber = 5;
 		this.stats.spawnInterval = 100;
-		this.stats.isSpawnAvailable = true;
+		this.stats.isSpawnAvaisafehousele = true;
 		this.stats.spawnTimeout = 0;
 		
 		//craft menu costs
@@ -699,23 +773,29 @@ class Player{
 		this.stats.skill3 = 600;
 		this.stats.skill4 = 2000;
 		this.stats.randomSizeCost = 2;
-		//lab menu related values
-		this.stats.labPoints = 0;
+		//safehouse menu related values
+		this.stats.safehousePoints = 0;
 		this.stats.triplerCost = 4;
 		this.stats.autoSpawn = 4;
 		this.stats.autoSpawnSpeeds = [11000,240,200,180,160];
 		this.stats.autoIndex = 0;
-		this.stats.labCraft = 8;
-		this.stats.labSkill = 8;
-		this.stats.lab1 = 1;
-		this.stats.lab2 = 2;
-		this.stats.lab3 = 3;
-		this.stats.lab4 = 5;
-		this.stats.lab5 = 2;
-		this.stats.lab6 = 4;
-		this.stats.lab7 = 5;
-		this.stats.lab8 = 6;
-		
+		this.stats.safehouseCraft = 8;
+		this.stats.safehouseSkill = 8;
+		this.stats.safehouse1 = 1;
+		this.stats.safehouse2 = 2;
+		this.stats.safehouse3 = 3;
+		this.stats.safehouse4 = 5;
+		this.stats.safehouse5 = 2;
+		this.stats.safehouse6 = 4;
+		this.stats.safehouse7 = 5;
+		this.stats.safehouse8 = 6;
+		//ascend menu
+		this.stats.materialDoubler = 4;
+		this.stats.autoRenovate = 12;
+		this.stats.renovateMin = 4;
+		this.stats.keepAllSpawns = 8;
+		this.stats.ascendBoostCredits = 7;
+		this.stats.keepTreadle = 6
 		//lowest percent conway pop allowed to not spawn more
 		this.stats.conwayPopThreshold = 0.06;
 		
@@ -746,23 +826,23 @@ class Player{
 		m.skill2.isDisabled = false;
 		m.skill3.isDisabled = false;
 		m.skill4.isDisabled = false;
-		//lab related costs
-		m = engine.ui.menu.lab;
+		//safehouse related costs
+		m = engine.ui.menu.safehouse;
 		m.material.value = stats.material;
 		m.materialTotal.value = stats.materialTotal;
-		m.renovate.value = 'Gain ' + stats.labPoints + ' Materials';
+		m.renovate.value = 'Gain ' + stats.safehousePoints + ' Materials';
 		m.tripler.cost = stats.triplerCost;
 		m.spawn.cost = stats.autoSpawn;
-		m.craft.cost = stats.labCraft;
-		m.skill.cost = stats.labSkill;
-		m.craft1.cost = stats.lab1;
-		m.craft2.cost = stats.lab2;
-		m.craft3.cost = stats.lab3;
-		m.craft4.cost = stats.lab4;
-		m.skill1.cost = stats.lab5;
-		m.skill2.cost = stats.lab6;
-		m.skill3.cost = stats.lab7;
-		m.skill4.cost = stats.lab8;
+		m.craft.cost = stats.safehouseCraft;
+		m.skill.cost = stats.safehouseSkill;
+		m.craft1.cost = stats.safehouse1;
+		m.craft2.cost = stats.safehouse2;
+		m.craft3.cost = stats.safehouse3;
+		m.craft4.cost = stats.safehouse4;
+		m.skill1.cost = stats.safehouse5;
+		m.skill2.cost = stats.safehouse6;
+		m.skill3.cost = stats.safehouse7;
+		m.skill4.cost = stats.safehouse8;
 		m.tripler.isDisabled = false;
 		m.spawn.isDisabled = false;
 		m.craft.isDisabled = false;
@@ -776,6 +856,16 @@ class Player{
 		m.skill3.isDisabled = false;
 		m.skill4.isDisabled = false;
 		//ascend
+		m = engine.ui.menu.ascend;
+		m.zen.value = stats.zen;
+		m.zenTotal.value = stats.zenTotal;
+		m.autoPlus.cost = 0;
+		m.autoMinus.cost = 0;
+		m.boostMaterial.cost = this.stats.materialDoubler;
+		m.autoRenovate.cost = this.stats.autoRenovate;
+		m.keepAllSpawns.cost = this.stats.keepAllSpawns;
+		m.boostCredits.cost = this.stats.ascendBoostCredits;
+		m.keepTreadle.cost = this.stats.keepTreadle;
 		//vacate
 		
 		
@@ -801,7 +891,9 @@ class Player{
 			//this.stats.lockedSpawnNumber = data.lockedSpawnNumber;
 			this.stats.material = data.material;
 			this.stats.materialTotal = data.materialTotal;
-			//TODO: add zen and whatever vacate currency is
+			this.stats.zen = data.zen;
+			this.stats.zenTotal = data.zenTotal;
+			//TODO: add vacate currency
 			
 			//TODO: add error correcting - may pass null to this.purchase
 			for (let buttonName of data.purchases){
@@ -813,23 +905,50 @@ class Player{
 	}
 	applyLabPrestige(gain){
 		//capture kept items
-		//TODO: add higher currencies for ascend and vacate
+		//TODO: add currency for vacate
 		console.log('Lab Prestige Gain: ' + gain);
+		let zen = this.stats.zen;
+		let zenTotal = this.stats.zenTotal;
 		let material = this.stats.material;
 		let total = this.stats.materialTotal;
-		let labPurchases = this.stats.purchases.slice(0);
-		let toggle = engine.ui.menu.lab.isToggled;
+		let purchaseList = this.stats.purchases.slice(0);
+		let toggle = engine.ui.menu.safehouse.isToggled;
 		//reset game, add values to stats, purchase kept buttons
 		engine.game.resetMenus();
 		this.initStats();
 		this.applyStats();
-		this.stats.materialTotal =total + gain;
+		this.stats.zen = zen;
+		this.stats.zenTotal = zenTotal;
+		this.stats.materialTotal = total + gain;
 		this.stats.material = material + gain;
-		engine.ui.menu.lab.isVisible = true;
-		engine.ui.menu.lab.isToggled = toggle;
-		for (let buttonName of labPurchases){
+		engine.ui.menu.safehouse.isVisible = true;
+		engine.ui.menu.safehouse.isToggled = toggle;
+		for (let buttonName of purchaseList){
 			let button = this.translateNameToButton(buttonName);
-			if(button.parent == engine.ui.menu.lab){
+			if(button.parent == engine.ui.menu.safehouse || engine.ui.menu.ascend){
+				this.purchase(button, true);
+			}
+		}
+	}
+	applyAscendPrestige(gain){
+		//capture kept items
+		//TODO: add currency for vacate
+		console.log('Ascend Prestige Gain: ' + gain);
+		let zen = this.stats.zen;
+		let zenTotal = this.stats.zenTotal;
+		let purchaseList = this.stats.purchases.slice(0);
+		let toggle = engine.ui.menu.ascend.isToggled;
+		//reset game, add values to stats, purchase kept buttons
+		engine.game.resetMenus();
+		this.initStats();
+		this.applyStats();
+		this.stats.zen = zen + gain;
+		this.stats.zenTotal = zenTotal + gain;
+		engine.ui.menu.ascend.isVisible = true;
+		engine.ui.menu.ascend.isToggled = toggle;
+		for (let buttonName of purchaseList){
+			let button = this.translateNameToButton(buttonName);
+			if(button.parent == engine.ui.menu.ascend){
 				this.purchase(button, true);
 			}
 		}
@@ -837,7 +956,7 @@ class Player{
 	//to be called by game cycle to autopurchase affordable
 	autoPurchase(){
 		for (let button of this.autoPurchases){
-				this.purchase(button,false);
+				this.purchase(button,false); 
 		}
 	}
 	
@@ -846,9 +965,9 @@ class Player{
 		let menu = engine.ui.menu;
 		console.log('Purchase request: ' + button.name);
 		if ((isFree == true) || (this.isAffordable(button))){
-			//TODO add other ascenscions here
+			//TODO add other ascensions here
 			//dont add ascensions to load purchase lists
-			if (button != menu.lab.renovate){
+			if (button != menu.safehouse.renovate && button != menu.ascend.ascension){
 				this.stats.purchases.push(button.name);
 			}
 			let cost = button.cost;
@@ -920,26 +1039,28 @@ class Player{
 				}
 				this.stats.currency -= cost;
 				break;
-				case menu.lab:
-				//TODO add labCraft and labSkill 
+				case menu.safehouse:
+				//TODO add safehouseCraft and safehouseSkill 
 				switch (button){
-					case menu.lab.craft:
+					case menu.safehouse.craft:
 					this.autoPurchases.push(menu.labor.craftDouble);
 					this.disableButton(button);
 					break;
-					case menu.lab.skill:
+					case menu.safehouse.skill:
 					this.autoPurchases.push(menu.labor.mouseSpawnDelay);
 					this.disableButton(button);
 					break;
-					case menu.lab.renovate:
-					this.applyLabPrestige(Math.floor(Math.cbrt(this.stats.currency/10)));
+					case menu.safehouse.renovate:
+					if(button.isHighlight){
+						this.applyLabPrestige(Math.floor(this.stats.baseMaterialRate*Math.cbrt(this.stats.currency/10)));
+					}
 					break;
-					case menu.lab.tripler:
+					case menu.safehouse.tripler:
 					this.stats.rateMultiplier += 2*this.stats.rateMultiplier;
 					this.stats.triplerCost += Math.floor(this.stats.triplerCost*costMultiplier);
 					button.cost = this.stats.triplerCost;
 					break;
-					case menu.lab.spawn:
+					case menu.safehouse.spawn:
 					if(this.stats.autoIndex < 4){
 						this.stats.autoIndex += 1;
 						this.stats.autoSpawn += Math.floor(this.stats.autoSpawn*costMultiplier);
@@ -950,79 +1071,123 @@ class Player{
 						}
 					}
 					break;
-					case menu.lab.craft1:
+					case menu.safehouse.craft1:
 					if (menu.labor.craft1.cost != null){
 						this.purchase(menu.labor.craft1,true);
 					}
-					this.labPrestigePurchases.push(menu.labor.craft1);
-					this.stats.lab1 = null;
+					this.safehousePrestigePurchases.push(menu.labor.craft1);
+					this.stats.safehouse1 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.craft2:
+					case menu.safehouse.craft2:
 					if (menu.labor.craft2.cost != null){
 						this.purchase(menu.labor.craft2,true);
 					}
-					this.labPrestigePurchases.push(menu.labor.craft2);
-					this.stats.lab2 = null;
+					this.safehousePrestigePurchases.push(menu.labor.craft2);
+					this.stats.safehouse2 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.craft3:
+					case menu.safehouse.craft3:
 					if (menu.labor.craft3.cost != null){
 						this.purchase(menu.labor.craft3,true);
 					}
-					this.labPrestigePurchases.push(menu.labor.craft3);
-					this.stats.lab3 = null;
+					this.safehousePrestigePurchases.push(menu.labor.craft3);
+					this.stats.safehouse3 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.craft4:
+					case menu.safehouse.craft4:
 					if (menu.labor.craft4.cost != null){
 						this.purchase(menu.labor.craft4,true);
 					}
-					this.labPrestigePurchases.push(menu.labor.craft4);
-					this.stats.lab4 = null;
+					this.safehousePrestigePurchases.push(menu.labor.craft4);
+					this.stats.safehouse4 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.skill1:
+					case menu.safehouse.skill1:
 					if (menu.labor.skill1.cost != null){
 						this.purchase(menu.labor.skill1,true);
 					}
 					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
-					this.labPrestigePurchases.push(menu.labor.skill1);
-					this.stats.lab5 = null;
+					this.safehousePrestigePurchases.push(menu.labor.skill1);
+					this.stats.safehouse5 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.skill2:
+					case menu.safehouse.skill2:
 					if (menu.labor.skill2.cost != null){
 						this.purchase(menu.labor.skill2,true);
 					}
 					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
-					this.labPrestigePurchases.push(menu.labor.skill2);
-					this.stats.lab6 = null;
+					this.safehousePrestigePurchases.push(menu.labor.skill2);
+					this.stats.safehouse6 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.skill3:
+					case menu.safehouse.skill3:
 					if (menu.labor.skill3.cost != null){
 						this.purchase(menu.labor.skill3,true);
 					}
 					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
-					this.labPrestigePurchases.push(menu.labor.skill3);
-					this.stats.lab7 = null;
+					this.safehousePrestigePurchases.push(menu.labor.skill3);
+					this.stats.safehouse7 = null;
 					this.disableButton(button);
 					break;
-					case menu.lab.skill4:
+					case menu.safehouse.skill4:
 					if (menu.labor.skill4.cost != null){
 						this.purchase(menu.labor.skill4,true);
 					}
 					this.stats.playerPopBonus += 0.25*this.stats.playerPopBonus;
-					this.labPrestigePurchases.push(menu.labor.skill4);
-					this.stats.lab8 = null;
+					this.safehousePrestigePurchases.push(menu.labor.skill4);
+					this.stats.safehouse8 = null;
 					this.disableButton(button);
 					break;
 					default:
 				}
 				this.stats.material -= cost;
 				break;
-				default:
+				case menu.ascend:
+				//TODO add ascendCraft and ascendSkill 
+				switch (button){
+					case menu.ascend.autoRenovate:
+					this.autoPurchases.push(menu.safehouse.renovate);
+					menu.ascend.autoPlus.isVisible = true;
+					menu.ascend.autoMinus.isVisible = true;
+					button.cost = null;
+					break;
+					case menu.ascend.autoPlus:
+					this.stats.renovateMin ++;
+					break;
+					case menu.ascend.autoMinus:
+					this.stats.renovateMin --;
+					break;
+					case menu.ascend.keepAllSpawns:
+					this.purchase(menu.safehouse.skill1, true);
+					this.purchase(menu.safehouse.skill2, true);
+					this.purchase(menu.safehouse.skill3, true);
+					this.purchase(menu.safehouse.skill4, true);
+					this.disableButton(button);
+					break;
+					case menu.ascend.ascension:
+					if(button.isHighlight){
+						this.applyAscendPrestige(Math.floor(Math.cbrt(this.stats.materialTotal/10)));
+					}
+					break;
+					case menu.ascend.boostCredits:
+					this.stats.rateMultiplier += 2*this.stats.rateMultiplier;
+					this.stats.ascendBoostCredits += Math.floor(this.stats.ascendBoostCredits*costMultiplier);
+					button.cost = this.stats.ascendBoostCredits;
+					break;
+					case menu.ascend.keepTreadle:
+					this.purchase(menu.safehouse.craft,true);
+					this.disableButton(button);
+					break;
+					case menu.ascend.boostMaterial:
+					this.stats.baseMaterialRate += this.stats.baseMaterialRate;
+					this.stats.materialDoubler += Math.floor(this.stats.materialDoubler*costMultiplier);
+					button.cost = this.stats.materialDoubler;
+					break;
+					default:
+				}
+				this.stats.zen -= cost;
+				break;default:
 			}
 		
 		}
@@ -1039,8 +1204,10 @@ class Player{
 	isAffordable(button){
 		let menu = engine.ui.menu;
 		switch (button.parent){
-			case menu.lab:
-			return (button == menu.lab.renovate || ((button.cost <= this.stats.material) && (button.cost != null)));
+			case menu.safehouse:
+			return (button == menu.safehouse.renovate || ((button.cost <= this.stats.material) && (button.cost != null)));
+			case menu.ascend:
+			return (button == menu.ascend.ascension || ((button.cost <= this.stats.zen) && (button.cost != null)));
 			break;
 			default:
 			return ((button.cost <= this.stats.currency) && (button.cost != null));
@@ -1191,7 +1358,7 @@ class Player{
 	while(this.mouseSpawnShapes.length > 0){
 		this.mouseSpawnShapes.pop();
 	}		
-	this.stats.isSpawnAvailable = false;
+	this.stats.isSpawnAvaisafehousele = false;
 	this.stats.spawnTimeout = engine.counter + this.stats.spawnInterval;
 	}
 	
